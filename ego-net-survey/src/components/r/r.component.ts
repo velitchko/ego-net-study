@@ -1,6 +1,4 @@
-// setup node-link component 
-
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input } from '@angular/core';
 import * as d3 from 'd3';
 
 @Component({
@@ -8,7 +6,7 @@ import * as d3 from 'd3';
     templateUrl: './r.component.html',
     styleUrls: ['./r.component.scss']
 })
-export class RComponent implements OnInit, OnChanges {
+export class RComponent implements OnInit {
     @Input() data: any = [];
     @Input() width: number = 960;
     @Input() height: number = 600;
@@ -19,11 +17,18 @@ export class RComponent implements OnInit, OnChanges {
         this.draw();
     }
 
-    ngOnChanges(changes: SimpleChanges): void {
-        this.draw();
-    }
-
     draw() {
+        // set svg width and height
+        const svg = d3.select('#r-container')
+            .attr('width', this.width)
+            .attr('height', this.height);
 
+        // draw rect
+        svg.append('rect')
+            .attr('x', 0)
+            .attr('y', 0)
+            .attr('width', this.width)
+            .attr('height', this.height)
+            .attr('fill', 'yellow');
     }
 }
