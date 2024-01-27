@@ -3,13 +3,20 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
+type QualitativeAnswer = {
+    m: number,
+    nl: number,
+    l: number,
+    r: number,
+    comments: string
+};
 @Injectable({
     providedIn: 'root'
 })
 
 export class ResultsService {
     private user: string = ''; //uuidv4
-    private results: Array<{ time: number, representation: string, answer: string | number }> = [];
+    private results: Array<{ time: number, task: string, representation: string, answer: string | number | QualitativeAnswer }> = [];
 
     constructor(private http: HttpClient) { }
 
@@ -22,7 +29,7 @@ export class ResultsService {
         return this.user;
     }
 
-    pushResult(result: { time: number, representation: string, answer: string | number }): void {
+    pushResult(result: { time: number, task: string, representation: string, answer: string | number | QualitativeAnswer }): void {
         // pushes result to local array
         this.results.push(result);
     }
