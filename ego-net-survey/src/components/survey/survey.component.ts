@@ -1,6 +1,7 @@
 
 import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import * as Survey from 'survey-angular';
+import { Model } from 'survey-core';
 import { LayeredDarkPanelless } from "survey-core/themes/layered-dark-panelless";
 import { surveyJson } from '../../assets/survey.js';
 import { HttpClient } from '@angular/common/http';
@@ -12,7 +13,7 @@ import { ResultsService } from '../../services/results.service';
     styleUrls: ['./survey.component.scss']
 })
 export class SurveyComponent implements OnInit {
-    protected surveyModel: Survey.Model;
+    protected surveyModel: Model;
 
     private timer: {
         start: number,
@@ -20,7 +21,7 @@ export class SurveyComponent implements OnInit {
     };
 
     constructor(private http: HttpClient, private resultsService: ResultsService) {
-        this.surveyModel = new Survey.Model();
+        this.surveyModel = new Model();
         this.timer = {
             start: 0,
             end: 0
@@ -28,16 +29,12 @@ export class SurveyComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        const survey = new Survey.Model(surveyJson);
+        const survey = new Model(surveyJson);
         survey.showProgressBar = 'bottom';
-        survey.applyTheme(LayeredDarkPanelless);
+        survey.showQuestionNumbers = 'off';
+        survey.applyTheme(LayeredDarkPanelless);        
 
         this.surveyModel = survey;
-
-
-        Survey
-            .SurveyNG
-            .render("survey", { model: this.surveyModel, isExpanded: true });
 
         this.surveyModel.onStarted.add((sender) => {
             this.timer.start = Date.now();
@@ -45,35 +42,51 @@ export class SurveyComponent implements OnInit {
         });
 
         this.surveyModel.onCurrentPageChanged.add((sender, options) => {
-            console.log(`Page changed to ${options.newCurrentPage.name}`);
             // update end time and record result
             this.timer.end = Date.now();
             const time = this.timer.end - this.timer.start;
-            console.log(`Page completed in ${time}ms`);
-            console.log(sender.data);
+
+            console.log('time taken: ' + time
+                + '\nold page: ' + options.oldCurrentPage.name,
+                + '\nnew page: ' + options.newCurrentPage.name,
+                + '\nrepresentation: ' + options.oldCurrentPage.name.split('-')[0],
+                + '\ntask: ' + options.oldCurrentPage.name.split('-')[options.oldCurrentPage.name.split('-').length - 1],
+                + '\nanswer: ' + sender.data[`${options.oldCurrentPage.name}-answer`])
+
             // push to results
             this.resultsService.pushResult({
                 time: time,
-                representation: options.newCurrentPage.name,
-                answer: sender.data
+                task: options.oldCurrentPage.name.split('-')[options.oldCurrentPage.name.split('-').length - 1],
+                // GET SUBSTRING FROM START TO options.newCurrentPage.name.split('-')[options.newCurrentPage.name.split('-').length - 1]
+                representation: options.oldCurrentPage.name.split('-')[0],
+                answer: sender.data[`${options.oldCurrentPage.name}-answer`]
             });
 
             // reset start time
             this.timer.start = Date.now();
         });
 
-        this.surveyModel.onComplete.add((result) => {
+        this.surveyModel.onComplete.add((sender, options) => {
             this.timer.end = Date.now();
             const time = this.timer.end - this.timer.start;
-
             console.log(`Survey completed in ${time}ms`);
-            console.log(result.data);
+
+            console.log(sender.data);
+
+            const qualitativeFeedback = {
+                m: sender.data['m'],
+                nl: sender.data['nl'],
+                l: sender.data['l'],
+                r: sender.data['r'],
+                comments: sender.data['comments']
+            };
 
             // push to results
             this.resultsService.pushResult({
-                time: time,
-                representation: 'complete',
-                answer: result.data
+                time: 0,
+                task: 'qualitative-feedback',
+                representation: 'qualitative-feedback',
+                answer: qualitativeFeedback
             });
 
             // post to backend
