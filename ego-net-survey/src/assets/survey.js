@@ -27,6 +27,7 @@ export const surveyJson = {
                 placeHolder: "Enter your answer here...",
                 inputType: "number",
                 isRequired: true,
+                title: "Answer",
                 name: "matrix-t1-answer"
             }]
         },
@@ -41,6 +42,7 @@ export const surveyJson = {
                 placeHolder: "Enter your answer here...",
                 inputType: "number",
                 isRequired: true,
+                title: "Answer",
                 name: "nodelink-t1-answer"
             }]
         },
@@ -55,6 +57,7 @@ export const surveyJson = {
                 placeHolder: "Enter your answer here...",
                 inputType: "number",
                 isRequired: true,
+                title: "Answer",
                 name: "radial-t1-answer"
             }]
         },
@@ -69,6 +72,7 @@ export const surveyJson = {
                 placeHolder: "Enter your answer here...",
                 inputType: "number",
                 isRequired: true,
+                title: "Answer",
                 name: "layered-t1-answer"
             }]
         },
@@ -85,7 +89,8 @@ export const surveyJson = {
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
-                    displayMode: "buttons"
+                    displayMode: "buttons",
+                    isRequired: true,
                     // autoGenerate: false,
                     // rateCount: 5,
                     // rateValues: [ 1, 2, 3, 4, 5 ]
@@ -99,7 +104,8 @@ export const surveyJson = {
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
-                    displayMode: "buttons"
+                    displayMode: "buttons",
+                    isRequired: true,
                     // autoGenerate: false,
                     // rateCount: 5,
                     // rateValues: [ 1, 2, 3, 4, 5 ]
@@ -113,7 +119,8 @@ export const surveyJson = {
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
-                    displayMode: "buttons"
+                    displayMode: "buttons",
+                    isRequired: true,
                     // autoGenerate: false,
                     // rateCount: 5,
                     // rateValues: [ 1, 2, 3, 4, 5 ]
@@ -127,7 +134,8 @@ export const surveyJson = {
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
-                    displayMode: "buttons"
+                    displayMode: "buttons",
+                    isRequired: true,
                     // autoGenerate: false,
                     // rateCount: 5,
                     // rateValues: [ 1, 2, 3, 4, 5 ]
