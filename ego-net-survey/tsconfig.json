@@ -5,6 +5,7 @@
     "baseUrl": "./",
     "outDir": "./dist/out-tsc",
     "noImplicitAny": false,
+    "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "strict": true,
     "noImplicitOverride": true,
