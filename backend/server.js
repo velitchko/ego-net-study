@@ -90,7 +90,7 @@ app.get('/params', (req, res) => {
 });
 
 app.post('/results', (req, res) => {
-    filePath = __dirname + '/data/data-' + req.body.user + '.json';
+    filePath = __dirname + '/data/data-' + req.body.params.user + '.json';
     console.log('📝 Writing to file...', filePath);
 
     fs.writeFileSync(filePath, JSON.stringify(req.body.results));
