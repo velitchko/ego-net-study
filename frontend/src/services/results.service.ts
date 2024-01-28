@@ -3,6 +3,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { SURVEY_JSON } from '../assets/survey.js';
+import { CONFIG } from '../assets/config';
 
 type QualitativeAnswer = {
     m: number,
@@ -11,17 +12,26 @@ type QualitativeAnswer = {
     r: number,
     comments: string
 };
+
+export type Params = {
+    user: string,
+    egoNetApproaches: Array<string>,
+    taskCode: string,
+    taskDescription: string
+};
+
+export type Result = { 
+    time: number, 
+    task: string, 
+    representation: string, 
+    answer: string | number | QualitativeAnswer 
+};
 @Injectable({
     providedIn: 'root'
 })
 
 export class ResultsService {
-    private params: {
-        user: string,
-        egoNetApproaches: Array<string>,
-        taskCode: string,
-        taskDescription: string
-    } | null;
+    private params: Params | null;
 
     protected questionMap: Map<string, string> = new Map([
         ['matrix', 'm-question'],
@@ -39,22 +49,21 @@ export class ResultsService {
 
     private surveySetup: boolean = false;
 
-    private results: Array<{ time: number, task: string, representation: string, answer: string | number | QualitativeAnswer }> = [];
+    private results: Array<Result> = new Array<Result>();
 
     constructor(private http: HttpClient) {
         this.params = null;
-        this.results = [];
     }
 
-    setUserParams(params: { user: string, egoNetApproaches: Array<string>, taskCode: string, taskDescription: string }): void {
+    setUserParams(params: Params): void {
         this.params = params;
     }
 
-    getUserParams(): { user: string, egoNetApproaches: Array<string>, taskCode: string, taskDescription: string } | null {
+    getUserParams(): Params | null {
         return this.params;
     }
 
-    pushResult(result: { time: number, task: string, representation: string, answer: string | number | QualitativeAnswer }): void {
+    pushResult(result: Result): void {
         // pushes result to local array
         this.results.push(result);
     }
@@ -101,6 +110,6 @@ export class ResultsService {
 
     submitResults(): Observable<any> {
         // submits results to backend
-        return this.http.post('http://localhost:8080/results', { params: this.params, results: this.results });
+        return this.http.post(`${CONFIG.API_BASE}results`, { params: this.params, results: this.results });
     }
 }

@@ -1,27 +1,15 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { AfterViewInit, Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
 import { Node, DataService, Edge, Cell } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
+import { CONFIG } from '../../assets/config';
 
 @Component({
     selector: 'app-m',
     templateUrl: './m.component.html',
     styleUrls: ['./m.component.scss']
 })
-export class MComponent implements OnInit {
-    @Input() data: any = [];
-    @Input() width: number = 960;
-    @Input() height: number = 600;
-
-    private margins = {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20
-    }
-    
-    private cellSize = 20;
-
+export class MComponent implements AfterViewInit {
     private nodes: Array<Node>;
     private matrix: Array<Cell>;
     private hops = [1, 2, 3, 4, 5];
@@ -65,22 +53,20 @@ export class MComponent implements OnInit {
             .filter((d: Cell) => d.source.toString().replace('.', '') === source || d.target.toString().replace('.', '') === target);
 
         cells
-            .attr('fill', (d: Cell) => {
-                return 'red';
-            })
-            .attr('fill-opacity', (d: Cell) => (d.value > 0 ? 1 : 0.1));
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', (d: Cell) => (d.value > 0 ? CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY : CONFIG.COLOR_CONFIG.NODE_OPACITY));
             
         // select current id and set opacity to 1
         d3.select(`#${id}`)
-            .attr('fill', 'red')
-            .attr('fill-opacity', 1);
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
 
         // set all labels opacity to 0.1
         this.rowsSelection
-            .attr('fill-opacity', 0.1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
 
         this.colsSelection
-            .attr('fill-opacity', 0.1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
 
         // select all labels where source or target is the current node
         const labels = this.rowsSelection
@@ -88,8 +74,8 @@ export class MComponent implements OnInit {
 
         labels
             .attr('font-weight', 'bold')
-            .attr('fill', 'red')
-            .attr('fill-opacity', 1);
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
 
         // select all labels where source or target is the current node
         const cols = this.colsSelection
@@ -97,29 +83,29 @@ export class MComponent implements OnInit {
 
         cols
             .attr('font-weight', 'bold')
-            .attr('fill', 'red')
-            .attr('fill-opacity', 1);
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity',  CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
     }
 
     mouseout(): void {
         this.cellsSelection
             .attr('fill', (d: Cell) => {
                 if (d.value > 0) {
-                    return 'white';
+                    return CONFIG.COLOR_CONFIG.NODE;
                 }
                 return 'transparent';
             })
-            .attr('fill-opacity', 1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.rowsSelection
             .attr('font-weight', 'normal')
             .attr('fill', 'white')
-            .attr('fill-opacity', 1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.colsSelection
             .attr('font-weight', 'normal')
             .attr('fill', 'white')
-            .attr('fill-opacity', 1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
     }
 
     draw(): void {
@@ -133,17 +119,17 @@ export class MComponent implements OnInit {
 
         // set svg width and height
         const svg = d3.select('#m-container')
-            .attr('width', this.width - this.margins.left - this.margins.right)
-            .attr('height', this.height - this.margins.top - this.margins.bottom)
+            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
+            .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + this.margins.left + ',' + this.margins.top + ')');
+            .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
 
         // set up the scales
-        const x = d3.scaleBand().range([0, this.width - this.margins.left - this.margins.right]);
-        const y = d3.scaleBand().range([0, this.height - this.margins.top - this.margins.bottom]);
+        const x = d3.scaleBand().range([0, CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT]);
+        const y = d3.scaleBand().range([0, CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM]);
 
         // set up the domains
 
@@ -156,18 +142,15 @@ export class MComponent implements OnInit {
                 .append('rect')
                 .attr('class', 'node')
                 .attr('id', (d: Cell) => `cell-${(d.source as string).replace('.', '')}-${(d.target as string).replace('.', '')}`)
-                .attr('x', (d: Cell) => d.x * this.cellSize) 
-                .attr('y', (d: Cell) => d.y * this.cellSize)
-                .attr('width', this.cellSize)
-                .attr('height', this.cellSize)
-                .attr('fill', (d: Cell) => {
-                    if (d.value > 0) {
-                        return 'white';
-                    }
-                    return 'transparent';
-                })
-                .attr('stroke', 'black')
-                .attr('stroke-width', 1)
+                .attr('x', (d: Cell) => d.x * CONFIG.SIZE_CONFIG.CELL_SIZE) 
+                .attr('y', (d: Cell) => d.y * CONFIG.SIZE_CONFIG.CELL_SIZE)
+                .attr('width', CONFIG.SIZE_CONFIG.CELL_SIZE)
+                .attr('height', CONFIG.SIZE_CONFIG.CELL_SIZE)
+                .attr('fill', (d: Cell) => d.value > 0 ? CONFIG.COLOR_CONFIG.NODE : 'transparent')
+                .attr('stroke', CONFIG.COLOR_CONFIG.NODE_STROKE)
+                .attr('stroke-width', CONFIG.SIZE_CONFIG.CELL_STROKE);
+
+        this.cellsSelection.filter((d: Cell) => d.value > 0)
                 .on('mouseover', this.mouseover.bind(this))
                 .on('mouseout', this.mouseout.bind(this));
 
@@ -180,14 +163,14 @@ export class MComponent implements OnInit {
                 .append('text')
                 .attr('class', 'row-label')
                 .attr('id', (d: Node) => `label-${(d.id as string).replace('.', '')}`)
-                .attr('font-size', 10)
+                .attr('font-size', CONFIG.SIZE_CONFIG.LABEL_SIZE)
                 .attr('text-anchor', 'start')
-                .attr('x', (d: Node) => d.index * this.cellSize + 10) 
-                .attr('y', -this.cellSize/4)
+                .attr('x', (d: Node) => d.index * CONFIG.SIZE_CONFIG.CELL_SIZE + 10) 
+                .attr('y', -CONFIG.SIZE_CONFIG.CELL_SIZE/4)
                 .attr('transform', (d: Node) => {
-                    return `rotate(-45, ${d.index * this.cellSize + 10}, ${-this.cellSize/4})`;
+                    return `rotate(-45, ${d.index * CONFIG.SIZE_CONFIG.CELL_SIZE + 10}, ${-CONFIG.SIZE_CONFIG.CELL_SIZE/4})`;
                 })
-                .attr('fill', 'white')
+                .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
                 .text((d: Node) => d.id);
 
         const columnLabels = g.append('g')
@@ -199,12 +182,12 @@ export class MComponent implements OnInit {
                 .append('text')
                 .attr('class', 'col-label')
                 .attr('id', (d: Node) => `label-${(d.id as string).replace('.', '')}`)
-                .attr('y', (d: Node) => d.index * this.cellSize + 10)
-                .attr('x', -this.cellSize/4)
+                .attr('y', (d: Node) => d.index * CONFIG.SIZE_CONFIG.CELL_SIZE + 10)
+                .attr('x', -CONFIG.SIZE_CONFIG.CELL_SIZE/4)
                 .attr('text-anchor', 'end')
                 .attr('dominant-baseline', 'top')
-                .attr('fill', 'white')
-                .attr('font-size', 10)
+                .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
+                .attr('font-size', CONFIG.SIZE_CONFIG.LABEL_SIZE)
                 .text((d: Node) => d.id);       
     }
 

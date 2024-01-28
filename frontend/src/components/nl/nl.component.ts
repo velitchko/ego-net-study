@@ -1,33 +1,21 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
+import { Node, NodeExt, Edge, EdgeExt, DataService } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
+import { CONFIG } from '../../assets/config';
 
-type NodeExt =  Node & { x: number, y: number };
-type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
 @Component({
     selector: 'app-nl',
     templateUrl: './nl.component.html',
     styleUrls: ['./nl.component.scss']
 })
 export class NlComponent implements OnInit {
-    @Input() data: any = [];
-    @Input() width: number = 960;
-    @Input() height: number = 600;
-
-    private margins = {
-        top: 20,
-        right: 20,
-        bottom: 20,
-        left: 20
-    }
-
     private nodes: Array<NodeExt>;
     private edges: Array<EdgeExt>;
 
     // d3 selections
     private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
-    private buffersSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
     private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
 
     // zoom 
@@ -94,35 +82,38 @@ export class NlComponent implements OnInit {
         // highlight node and its edges
         // get id of currently selected node
         const id = ($event.target as any).id.replace('node-', '');
+
         // set opacity of all no    des to 0.1
         this.nodesSelection
-            .attr('fill-opacity', 0.1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
         
-        // set opacity of all buffers to 0.1
-        this.buffersSelection
-            .attr('fill-opacity', 0.1);
-
         // set opacity of all edges to 0.1
         this.edgesSelection
-            .attr('stroke-opacity', 0.1);
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY);
 
         // set opacity of all texts to 0.1
         this.textsSelection
-            .style('opacity', 0.1);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
 
         // set opacity of current node to 1
         d3.select(`#node-${id}`)
-            .attr('fill-opacity', 1);
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+
+        d3.select(`#label-${id}`)
+            .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
+            .style('font-weight', 'bold');
 
         // find targets or sourcdes of current node in this.edges
         const neighbors = new Array<string | number>();
         
         this.edges.forEach((d: EdgeExt) => {
-            if(d.source.id === id) {
-                neighbors.push(d.target.id);
+            if(d.source.id.toString().replace('.', '') === id) {
+                neighbors.push(d.target.id.toString().replace('.', ''));
             } 
-            if(d.target.id === id) {
-                neighbors.push(d.source.id);
+            if(d.target.id.toString().replace('.', '') === id) {
+                neighbors.push(d.source.id.toString().replace('.', ''));
             }
         });
 
@@ -130,45 +121,44 @@ export class NlComponent implements OnInit {
         this.nodesSelection
             .filter((d: NodeExt) => {
                 // console.log(d)
-                return neighbors.includes(d.id);
+                return neighbors.includes(d.id.toString().replace('.', ''));
             })
-            .attr('fill-opacity', 1);
-
-        // set opacity of buffers to 1
-        this.buffersSelection
-            .filter((d: NodeExt) => {
-                return neighbors.includes(d.id);
-            })
-            .attr('fill-opacity', 1);
-
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
         
         // set opacity of edges to 1
         this.edgesSelection
             .filter((d: EdgeExt) => {
-                return (neighbors.includes(d.source.id) && d.target.id == id) ||
-                        (neighbors.includes(d.target.id) && d.source.id == id);
+                return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
+                        (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
             })
-            .attr('stroke-opacity', 1);
+            .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_HIGHILIGHT_OPACITY);
 
         // set opacity of texts to 1
         this.textsSelection
             .filter((d: NodeExt) => {
-                return neighbors.includes(d.id);
+                return neighbors.includes(d.id.toString().replace('.', ''));
             })
-            .style('opacity', 1)
+            .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
     }
 
     mouseout() {
         // reset opacity
         this.nodesSelection
-            .attr('fill-opacity', 1);
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-opacity', 1);
+            .attr('stroke', CONFIG.COLOR_CONFIG.EDGE_STROKE)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .style('opacity', 1);
+            .attr('font-weight', 'normal')
+            .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
     }
 
     draw() {
@@ -181,13 +171,13 @@ export class NlComponent implements OnInit {
             });
         // set svg width and height
         const svg = d3.select('#nl-container')
-            .attr('width', this.width - this.margins.left - this.margins.right)
-            .attr('height', this.height - this.margins.top - this.margins.bottom)
+            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
+            .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
             .call(this.zoom.bind(this));
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + this.margins.left + ',' + this.margins.top + ')');
+            .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
         // Initialize the links
         const edges = g.append('g')
@@ -198,20 +188,9 @@ export class NlComponent implements OnInit {
             .enter()
             .append('line')
             .attr('class', 'link')
-            .attr('stroke', (d: EdgeExt) => this.colorFill(1)) // TODO: Define d.hop from original code
-            .attr('stroke-width', (d: EdgeExt) => d.value);
-
-        // Node Overlay (to space edges from nodes)
-        const buffers = g.append('g')
-            .attr('id', 'buffers')
-            .attr('fill', 'white');
-
-        this.buffersSelection = buffers.selectAll('.buffer')
-            .data(this.nodes)
-            .enter()
-            .append('circle')
-            .attr('class', 'buffer')
-            .attr('r', 8);
+            .attr('stroke', (d: EdgeExt) => CONFIG.COLOR_CONFIG.EDGE_STROKE) // TODO: Define d.hop from original code
+            .attr('stroke-width', (d: EdgeExt) => CONFIG.SIZE_CONFIG.EDGE_STROKE) // TODO: Define weight from original code
+            .attr('stroke-opacity', 0);
 
         // Initialize the nodes
         const nodes = g.append('g')
@@ -222,11 +201,12 @@ export class NlComponent implements OnInit {
             .enter()
             .append('circle')
             .attr('class', 'node')
-            .attr('id', (d: NodeExt) => `node-${(d.id as string).replace('.', '')}`)
-            .attr('r', 7)
-            .attr('stroke', (d: NodeExt) => this.colorStroke(1)) // TODO: Define d.hop from original code
-            .attr('fill', (d: NodeExt) => this.colorFill(1)) // TODO: Define d.hop from original code
-            .attr('fill-opacity', 1)
+            .attr('id', (d: NodeExt) => `node-${d.id.toString().replace('.', '')}`)
+            .attr('r', CONFIG.SIZE_CONFIG.NODE)
+            .attr('stroke', (d: NodeExt) => CONFIG.COLOR_CONFIG.NODE_STROKE) // TODO: Define d.hop from original code
+            .attr('stroke-opacity', 0) // TODO: Define weight from original code
+            .attr('fill', (d: NodeExt) => CONFIG.COLOR_CONFIG.NODE) // TODO: Define d.hop from original code
+            .attr('fill-opacity', 0)
             .style('cursor', 'pointer')
             .on('mouseover', this.mouseover.bind(this))
             .on('mouseout', this.mouseout.bind(this));
@@ -240,14 +220,15 @@ export class NlComponent implements OnInit {
             .enter()
             .append('text')
             .attr('class', 'label')
-            .attr('id', (d: NodeExt) => `label-${d.id}`)
+            .attr('id', (d: NodeExt) => `label-${d.id.toString().replace('.', '')}`)
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'central')
-            .attr('font-size', '6pt')
+            .attr('font-size', CONFIG.SIZE_CONFIG.LABEL_SIZE)
+            .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
+            .attr('fill-opacity', 0)
             .style('pointer-events', 'none')
             .style('user-select', 'none')
-            .style('opacity', 1)
-            .text(d => Math.floor(Math.random() * 99))
+            .text(() => Math.floor(Math.random() * 99))
         // .on('mouseover', this.mouseover.bind(this))
         // .on('mouseout', this.mouseout.bind(this));
         //.text(d => d.id)
@@ -265,8 +246,8 @@ export class NlComponent implements OnInit {
                     .strength(-200))
             .force('center',
                 d3.forceCenter(
-                    (this.width) / 2.0,
-                    (this.height) / 2.0))
+                    (CONFIG.WIDTH) / 2.0,
+                    (CONFIG.HEIGHT) / 2.0))
             .on('end', this.ticked.bind(this));
     }
 
@@ -275,18 +256,18 @@ export class NlComponent implements OnInit {
             .attr('x1', (d: EdgeExt) => d.source.x)
             .attr('y1', (d: EdgeExt) => d.source.y)
             .attr('x2', (d: EdgeExt) => d.target.x)
-            .attr('y2', (d: EdgeExt) => d.target.y);
+            .attr('y2', (d: EdgeExt) => d.target.y)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
             .attr('cx', (d: NodeExt) => d.x)
-            .attr('cy', (d: NodeExt) => d.y);
-
-        this.buffersSelection
-            .attr('cx', (d: NodeExt) => d.x)
-            .attr('cy', (d: NodeExt) => d.y);
+            .attr('cy', (d: NodeExt) => d.y)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
             .attr('x', (d: NodeExt) => d.x)
-            .attr('y', (d: NodeExt) => d.y);
+            .attr('y', (d: NodeExt) => d.y)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 }
