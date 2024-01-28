@@ -4,9 +4,6 @@ const app = express();
 const uuid = require('uuid');
 const cors = require('cors');
 
-app.use(express.json());
-app.use(cors());
-
 const egoNetApproaches = [ 'matrix', 'nodelink', 'radial', 'layered' ];
 const taskCodes = [ 't1', 't2', 't3', 't4', 't5' ];
 const taskDescriptions = new Map([
@@ -50,6 +47,9 @@ generateLatinSquares = () => {
         });
     });
 }
+
+app.use(express.json());
+app.use(cors());
 
 app.get('/params', (req, res) => {
     // keep track of each new user 
