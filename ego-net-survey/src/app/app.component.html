@@ -1,4 +1,15 @@
 <div class="flex items-center justify-center px-5 py-3">
   <h1 class="text-4xl font-semibold text-white">Ego Network Study</h1>
 </div>
-<router-outlet></router-outlet>
+
+<div *ngIf="!this.resultsService.isSetup()">
+  <div class="flex justify-center items-center w-full h-[90vh]">
+    <div class="rounded-full h-32 w-32 bg-violet-800 animate-bounce animate-ping"></div>
+    <pre class="text-white text-2xl text-left">
+      Loading the survey...
+      <span class="text-gray-400 text-xl">Please do not close this page</span>
+    </pre>
+  </div>
+</div>
+
+<router-outlet></router-outlet> 
