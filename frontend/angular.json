@@ -33,7 +33,11 @@
               "src/styles.scss",
               "node_modules/survey-angular/defaultV2.min.css"
             ],
-            "scripts": []
+            "scripts": [],
+            "allowedCommonJsDependencies": [
+              "survey-angular",
+              "survey-core"
+            ]
           },
           "configurations": {
             "production": {
