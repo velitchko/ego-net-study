@@ -1,6 +1,5 @@
-const express = require('express'),
-    fs = require('fs'),
-    url = require('url');
+const express = require('express');
+const fs = require('fs');
 const app = express();
 const uuid = require('uuid');
 const cors = require('cors');
@@ -17,15 +16,44 @@ const taskDescriptions = new Map([
     ['t4', 'find a node\'s neighbors\' neighbors\' neighbors'],
     ['t5', 'find a node\'s neighbors\' neighbors\' neighbors\' neighbors']
 ]);
+const squaresMap = new Map();
 
 // create a tracker for every user that visits the site
 let userTracker = new Map();
 
+generateLatinSquares = () => {
+    console.log('🔢 Generating Latin Squares...');
+
+    let n = taskCodes.length;
+
+    for (let participantIndex = 0; participantIndex < 5; participantIndex++) {
+        let squares = [];
+        for (let i = 0; i < n; i++) {
+            let square = [];
+            for (let j = 0; j < egoNetApproaches.length; j++) {
+                let taskCode = taskCodes[i];
+                let egoNetApproach = egoNetApproaches[(j + participantIndex) % egoNetApproaches.length];
+                square.push({ egoNetApproach, taskCode });
+            }
+            squares.push(square);
+        }
+        squaresMap.set(participantIndex, squares);
+    }
+
+    squaresMap.forEach((squares, participantIndex) => {
+        console.log('Participant', participantIndex);
+        squares.forEach((square, index) => {
+            console.log('Square', index);
+            square.forEach((cell) => {
+                console.log(cell);
+            });
+        });
+    });
+}
+
 app.get('/params', (req, res) => {
     // keep track of each new user 
     let user = uuid.v4();
-    // grab index of last user
-    let lastUserIndex = userTracker.size - 1;
 
     let randomEgoNetApproaches, randomTaskCode; 
 
@@ -34,6 +62,11 @@ app.get('/params', (req, res) => {
 
     // select a random task code
     randomTaskCode = taskCodes[Math.floor(Math.random() * taskCodes.length)];
+
+    console.log(userTracker.size % 5);
+    // calculate participant index
+    const square = squaresMap.get(userTracker.size % 5);
+    console.log(square);
     
     userTracker.set(user, {
         egoNetApproaches: randomEgoNetApproaches,
@@ -57,13 +90,8 @@ app.get('/params', (req, res) => {
 });
 
 app.post('/results', (req, res) => {
-    let body = '';
-    console.log('📝 Writing to file...');
-    // filePath = __dirname + '/public/data.json';
-    // add uuid to each file name to avoid overwriting
     filePath = __dirname + '/data/data-' + req.body.user + '.json';
-
-    console.log('data', req.body);
+    console.log('📝 Writing to file...', filePath);
 
     fs.writeFileSync(filePath, JSON.stringify(req.body.results));
     res.send({
@@ -75,7 +103,8 @@ app.post('/results', (req, res) => {
 // start the server
 app.listen(8080)
     .on('error', (err) => {
-        console.log(err);
+        console.log(`🚒 ${err}`);
     }).on('listening', () => {
+        generateLatinSquares();
         console.log('🚀 Server is listening at http://localhost:8080');
     });
