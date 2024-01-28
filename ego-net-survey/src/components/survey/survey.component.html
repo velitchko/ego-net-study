@@ -1,1 +1,3 @@
-<survey [model]="surveyModel"></survey>
+<div class="w-full" *ngIf="this.resultsService.isSetup()">
+    <survey [model]="survey"></survey>
+</div>
