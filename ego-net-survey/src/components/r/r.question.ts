@@ -6,7 +6,7 @@ const CUSTOM_TYPE = 'r-question';
 
 
 @Component({
-    selector: "r-question",
+    selector: 'r-question',
     template: `
         <app-r></app-r>
     `,
@@ -47,15 +47,14 @@ Serializer.addClass(
     CUSTOM_TYPE,
     [
         {
-            name: "description"
+            name: 'description'
         },
         {
-            name: "title"
+            name: 'title'
         }
     ],
     () => {
-        console.log('Custom type');
-        return new CustomRadialQuestionModel("");
+        return new CustomRadialQuestionModel('');
     },
-    "question"
+    'question'
 );

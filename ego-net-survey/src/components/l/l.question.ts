@@ -6,7 +6,7 @@ const CUSTOM_TYPE = 'l-question';
 
 
 @Component({
-    selector: "l-question",
+    selector: 'l-question',
     template: `
         <app-l></app-l>
     `,
@@ -47,15 +47,14 @@ Serializer.addClass(
     CUSTOM_TYPE,
     [
         {
-            name: "description"
+            name: 'description'
         },
         {
-            name: "title"
+            name: 'title'
         }
     ],
     () => {
-        console.log('Custom type');
-        return new CustomLayeredQuestionModel("");
+        return new CustomLayeredQuestionModel('');
     },
-    "question"
+    'question'
 );

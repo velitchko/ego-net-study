@@ -6,7 +6,7 @@ const CUSTOM_TYPE = 'm-question';
 
 
 @Component({
-    selector: "m-question",
+    selector: 'm-question',
     template: `
         <app-m></app-m>
     `,
@@ -47,15 +47,14 @@ Serializer.addClass(
     CUSTOM_TYPE,
     [
         {
-            name: "description"
+            name: 'description'
         },
         {
-            name: "title"
+            name: 'title'
         }
     ],
     () => {
-        console.log('Custom type');
-        return new CustomMatrixQuestionModel("");
+        return new CustomMatrixQuestionModel('');
     },
-    "question"
+    'question'
 );

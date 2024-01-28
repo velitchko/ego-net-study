@@ -6,7 +6,7 @@ const CUSTOM_TYPE = 'nl-question';
 
 
 @Component({
-    selector: "nl-question",
+    selector: 'nl-question',
     template: `
         <app-nl></app-nl>
     `,
@@ -47,15 +47,14 @@ Serializer.addClass(
     CUSTOM_TYPE,
     [
         {
-            name: "description"
+            name: 'description'
         },
         {
-            name: "title"
+            name: 'title'
         }
     ],
     () => {
-        console.log('Custom type');
-        return new CustomNodeLinkQuestionModel("");
+        return new CustomNodeLinkQuestionModel('');
     },
-    "question"
+    'question'
 );
