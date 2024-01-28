@@ -2,6 +2,55 @@
   <h1 class="text-4xl font-semibold text-white">Ego Network Study</h1>
 </div>
 
+<div *ngIf="hasErrored" class="absolute flex items-center justify-center w-full">
+  <div id="alert-additional-content-2" class="p-4 mb-4 text-red-800 border border-red-300 rounded-lg bg-red-50" role="alert">
+    <div class="flex items-center">
+      <svg class="flex-shrink-0 w-4 h-4 me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+        <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+      </svg>
+      <span class="sr-only">Info</span>
+      <h3 class="text-lg font-medium">Error.</h3>
+    </div>
+    <div class="mt-2 mb-4 text-md">
+        An error has occurred when attempting to load the survey. 
+        Please try reloading this webpage. 
+        More information about the error is below.
+    </div>
+    <div class="flex">
+      <button 
+        (click)="this.viewMore()"
+        type="button" 
+        class="text-white bg-red-800 hover:bg-red-900 focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 me-2 text-center inline-flex items-center">
+        <svg class="me-2 h-3 w-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 14">
+          <path d="M10 0C4.612 0 0 5.336 0 7c0 1.742 3.546 7 10 7 6.454 0 10-5.258 10-7 0-1.664-4.612-7-10-7Zm0 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6Z"/>
+        </svg>
+        View Details
+      </button>
+      <button 
+        (click)="this.dismiss()"
+        type="button" 
+        class="text-red-800 bg-transparent border border-red-800 hover:bg-red-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5 text-center" 
+        aria-label="Close">
+        Dismiss
+      </button>
+    </div>
+    <div *ngIf="this.showError.show" class="mt-4">
+      <pre class="text-sm">
+        {{ this.showError.message }}
+        Contact the administrator if this error persists.
+      </pre>
+      <a 
+        href="mailto:{{ this.showError.email }}" 
+        class="inline-flex items-center px-5 py-2.5 text-sm font-medium text-center text-red-800 bg-transparent border border-red-800 hover:bg-red-900 hover:text-white focus:ring-4 focus:outline-none focus:ring-red-300 font-medium rounded-lg text-xs px-3 py-1.5">
+        Contact the administrator
+        <svg class="w-3.5 h-3.5 ms-2 rtl:rotate-180" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+          <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+        </svg>
+      </a>
+    </div>
+  </div>
+</div>
+
 <div *ngIf="!this.resultsService.isSetup()">
   <div class="flex justify-center items-center w-full h-[90vh]">
     <div class="rounded-full h-32 w-32 bg-violet-800 animate-bounce animate-ping"></div>
@@ -11,5 +60,6 @@
     </pre>
   </div>
 </div>
+
 
 <router-outlet></router-outlet> 
