@@ -1,4 +1,4 @@
-export const surveyJson = {
+export const SURVEY_JSON = {
     firstPageIsStarted: true,
     showPrevButton: false,
     showProgressBar: "bottom",

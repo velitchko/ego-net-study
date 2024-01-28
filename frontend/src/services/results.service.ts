@@ -2,7 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { surveyJson } from '../assets/survey.js';
+import { SURVEY_JSON } from '../assets/survey.js';
 
 type QualitativeAnswer = {
     m: number,
@@ -85,7 +85,7 @@ export class ResultsService {
             };
 
             // put question after intro page
-            surveyJson.pages.splice(i + 1, 0, question);
+            SURVEY_JSON.pages.splice(i + 1, 0, question);
         });
         
         this.surveySetup = true;
@@ -96,7 +96,7 @@ export class ResultsService {
     }
 
     getSurvey(): any {
-        return surveyJson;
+        return SURVEY_JSON;
     }
 
     submitResults(): Observable<any> {
