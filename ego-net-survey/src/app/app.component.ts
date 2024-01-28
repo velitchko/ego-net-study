@@ -9,15 +9,18 @@ import { ResultsService } from 'src/services/results.service';
 export class AppComponent implements OnInit {
   title = 'ego-net-survey';
 
-  constructor(private http: HttpClient, private resultsService: ResultsService) {}
+  constructor(private http: HttpClient, protected resultsService: ResultsService) {}
 
   ngOnInit() {
     // request params from backend
     this.http.get('http://localhost:8080/params').subscribe((res: any) => {
       if (res) {
-        this.resultsService.setUser(res.user);
+        this.resultsService.setUserParams(res.user);
+        this.resultsService.setupSurvey();
+        console.log('👌Got survey params from backend');
+        console.log(res);
       } else {
-        console.error('Error: no params received from backend');
+        console.error('🚒 Error: no params received from backend');
       }
     });
 

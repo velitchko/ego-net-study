@@ -1,9 +1,7 @@
 
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
-import * as Survey from 'survey-angular';
-import { Model } from 'survey-core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterRenderSurveyEvent, Model } from 'survey-core';
 import { LayeredDarkPanelless } from "survey-core/themes/layered-dark-panelless";
-import { surveyJson } from '../../assets/survey.js';
 import { HttpClient } from '@angular/common/http';
 import { ResultsService } from '../../services/results.service';
 
@@ -12,46 +10,52 @@ import { ResultsService } from '../../services/results.service';
     templateUrl: './survey.component.html',
     styleUrls: ['./survey.component.scss']
 })
-export class SurveyComponent implements OnInit {
-    protected surveyModel: Model;
+export class SurveyComponent {
+    protected survey: Model;
 
     private timer: {
         start: number,
         end: number
     };
 
-    constructor(private http: HttpClient, private resultsService: ResultsService) {
-        this.surveyModel = new Model();
+    constructor(private http: HttpClient, protected resultsService: ResultsService) {
+        this.survey = new Model();
+        
+
         this.timer = {
             start: 0,
             end: 0
         };
-    }
 
-    ngOnInit(): void {
-        const survey = new Model(surveyJson);
-        survey.showProgressBar = 'bottom';
-        survey.showQuestionNumbers = 'off';
+        this.survey.onAfterRenderSurvey.add(this.init.bind(this));       
+    }  
+    
+    ngAfterViewInit() {
+        this.survey.onAfterRenderSurvey.add(this.init.bind(this));
+    }
+    
+    
+    init(): void {
+        // check if survey is setup already if not try again in 1 second
+        if (!this.resultsService.isSetup()) {
+            setTimeout(() => this.init(), 1000);
+            return;
+        }
+
+        const survey = new Model(this.resultsService.getSurvey());
         survey.applyTheme(LayeredDarkPanelless);        
 
-        this.surveyModel = survey;
+        this.survey = survey;
 
-        this.surveyModel.onStarted.add((sender) => {
+        this.survey.onStarted.add((sender) => {
             this.timer.start = Date.now();
-            console.log('Survey started');
+            console.log('⏰ Survey started');
         });
 
-        this.surveyModel.onCurrentPageChanged.add((sender, options) => {
+        this.survey.onCurrentPageChanged.add((sender, options) => {
             // update end time and record result
             this.timer.end = Date.now();
             const time = this.timer.end - this.timer.start;
-
-            console.log('time taken: ' + time
-                + '\nold page: ' + options.oldCurrentPage.name,
-                + '\nnew page: ' + options.newCurrentPage.name,
-                + '\nrepresentation: ' + options.oldCurrentPage.name.split('-')[0],
-                + '\ntask: ' + options.oldCurrentPage.name.split('-')[options.oldCurrentPage.name.split('-').length - 1],
-                + '\nanswer: ' + sender.data[`${options.oldCurrentPage.name}-answer`])
 
             // push to results
             this.resultsService.pushResult({
@@ -66,12 +70,7 @@ export class SurveyComponent implements OnInit {
             this.timer.start = Date.now();
         });
 
-        this.surveyModel.onComplete.add((sender, options) => {
-            this.timer.end = Date.now();
-            const time = this.timer.end - this.timer.start;
-            console.log(`Survey completed in ${time}ms`);
-
-            console.log(sender.data);
+        this.survey.onComplete.add((sender) => {
 
             const qualitativeFeedback = {
                 m: sender.data['m'],
@@ -90,11 +89,11 @@ export class SurveyComponent implements OnInit {
             });
 
             // post to backend
-            this.resultsService.submitResults().subscribe((res: any) => {
+            this.resultsService.submitResults().subscribe((res: Response) => {
                 if (res) {
                     console.log(res);
                 } else {
-                    console.error('Error: no response received from backend');
+                    console.error('🚒 Error: no response received from backend');
                 }
             });
         });

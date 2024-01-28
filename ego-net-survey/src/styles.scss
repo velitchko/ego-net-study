@@ -5,4 +5,8 @@
 
 body, html {
     background-color: #272832;
+
+    & svg {
+        overflow: visible;
+    }
 }

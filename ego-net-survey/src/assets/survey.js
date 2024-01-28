@@ -1,7 +1,11 @@
 export const surveyJson = {
     firstPageIsStarted: true,
     showPrevButton: false,
-    showProgressBar: "top",
+    showProgressBar: "bottom",
+    showQuestionNumbers: "off",
+    fitToContainer: true,
+    widthMode: "static",
+    width: "100%",
     pages: [
         {
             name: "intro",
@@ -15,66 +19,6 @@ export const surveyJson = {
                     `
                 }
             ]
-        },
-        {
-            name: "matrix-t1",
-            elements: [{
-                type: "m-question",
-                title: "Matrix Representation",
-                description: "Please rate the following statements about the matrix representation of the ego-network.",
-            }, {
-                type: "text",
-                placeHolder: "Enter your answer here...",
-                inputType: "number",
-                isRequired: true,
-                title: "Answer",
-                name: "matrix-t1-answer"
-            }]
-        },
-        {
-            name: "nodelink-t1",
-            elements: [{
-                type: "nl-question",
-                title: "Node-Link Representation",
-                description: "Please rate the following statements about the node-link representation of the ego-network.",
-            }, {
-                type: "text",
-                placeHolder: "Enter your answer here...",
-                inputType: "number",
-                isRequired: true,
-                title: "Answer",
-                name: "nodelink-t1-answer"
-            }]
-        },
-        {
-            name: "radial-t1",
-            elements: [{
-                type: "r-question",
-                title: "Radial Representation",
-                description: "Please rate the following statements about the radial representation of the ego-network.",
-            }, {
-                type: "text",
-                placeHolder: "Enter your answer here...",
-                inputType: "number",
-                isRequired: true,
-                title: "Answer",
-                name: "radial-t1-answer"
-            }]
-        },
-        {
-            name: "layered-t1",
-            elements: [{
-                type: "l-question",
-                title: "Layered Representation",
-                description: "Please rate the following statements about the layered representation of the ego-network.",
-            }, {
-                type: "text",
-                placeHolder: "Enter your answer here...",
-                inputType: "number",
-                isRequired: true,
-                title: "Answer",
-                name: "layered-t1-answer"
-            }]
         },
         {
             name: "feedback",
@@ -149,6 +93,5 @@ export const surveyJson = {
                 }
             ]
         }
-
     ]
 };
