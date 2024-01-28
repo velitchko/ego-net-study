@@ -1,3 +1,7 @@
 <div class="w-full" *ngIf="this.resultsService.isSetup()">
     <survey [model]="survey"></survey>
+
+    <div *ngIf="this.completed" class="flex items-center justify-center w-full h-[70vh]">
+        <p class="text-[20em]">👍</p>
+    </div>
 </div>

@@ -1,9 +1,9 @@
 
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { AfterRenderSurveyEvent, Model } from 'survey-core';
+import { Component } from '@angular/core';
+import { Model } from 'survey-core';
 import { LayeredDarkPanelless } from "survey-core/themes/layered-dark-panelless";
-import { HttpClient } from '@angular/common/http';
 import { ResultsService } from '../../services/results.service';
+import { GlobalErrorHandler } from '../../services/error.service';
 
 @Component({
     selector: 'app-survey',
@@ -12,26 +12,28 @@ import { ResultsService } from '../../services/results.service';
 })
 export class SurveyComponent {
     protected survey: Model;
+    protected completed: boolean = false;
 
     private timer: {
         start: number,
         end: number
     };
 
-    constructor(private http: HttpClient, protected resultsService: ResultsService) {
+    constructor(protected resultsService: ResultsService, private errorService: GlobalErrorHandler) {
         this.survey = new Model();
         
-
         this.timer = {
             start: 0,
             end: 0
-        };
-
-        this.survey.onAfterRenderSurvey.add(this.init.bind(this));       
+        };   
     }  
     
     ngAfterViewInit() {
-        this.survey.onAfterRenderSurvey.add(this.init.bind(this));
+        try {
+            this.survey.onAfterRenderSurvey.add(this.init.bind(this));
+        } catch (error) {
+            this.errorService.handleError(error);
+        }
     }
     
     
@@ -92,6 +94,7 @@ export class SurveyComponent {
             this.resultsService.submitResults().subscribe((res: Response) => {
                 if (res) {
                     console.log(res);
+                    this.completed = true;
                 } else {
                     console.error('🚒 Error: no response received from backend');
                 }
