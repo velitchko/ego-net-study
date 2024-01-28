@@ -1,6 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
 import * as d3 from 'd3';
-import { DataService } from '../../services/data.service';
+import { Node, Edge, DataService } from '../../services/data.service';
+
+type NodeExt =  Node & { x: number, y: number };
+type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
 
 @Component({
     selector: 'app-r',
@@ -19,24 +22,24 @@ export class RComponent implements OnInit {
         left: 20
     }
 
-    private nodes: Array<{ id: string | number, label: string }>;
-    private edges: Array<{ source: string | number, target: string | number, value: number }>;
+    private nodes: Array<NodeExt>;
+    private edges: Array<EdgeExt>;
     private hops = [1, 2, 3, 4, 5];
     private radius = 50;
 
     // d3 selections
-    private nodesSelection: d3.Selection<SVGCircleElement, any, any, any>;
-    private edgesSelection: d3.Selection<SVGLineElement, any, any, any>;
-    private buffersSelection: d3.Selection<SVGCircleElement, any, any, any>;
-    private guidesSelection: d3.Selection<SVGCircleElement, any, any, any>;
-    private textsSelection: d3.Selection<SVGTextElement, any, any, any>;
+    private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
+    private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
+    private buffersSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
+    private guidesSelection: d3.Selection<SVGCircleElement, number, any, any>;
+    private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService) {
-        this.nodes = this.dataService.getNodes();
-        this.edges = this.dataService.getEdges();
+        this.nodes = this.dataService.getNodes() as Array<NodeExt>;
+        this.edges = this.dataService.getEdges() as Array<EdgeExt>;
 
         this.nodesSelection = d3.select('#nl-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#nl-container').selectAll('line.link');
@@ -99,9 +102,9 @@ export class RComponent implements OnInit {
             .attr('fill-opacity', 1);
 
         // find targets or sourcdes of current node in this.edges
-        const neighbors = new Array<any>();
+        const neighbors = new Array<string | number>();
 
-        this.edges.forEach((d: any) => {
+        this.edges.forEach((d: EdgeExt) => {
             if (d.source.id === id) {
                 neighbors.push(d.target.id);
             }
@@ -112,7 +115,7 @@ export class RComponent implements OnInit {
 
         // set opacity of nodes to 1
         this.nodesSelection
-            .filter((d: any) => {
+            .filter((d: NodeExt) => {
                 // console.log(d)
                 return neighbors.includes(d.id);
             })
@@ -120,7 +123,7 @@ export class RComponent implements OnInit {
 
         // set opacity of buffers to 1
         this.buffersSelection
-            .filter((d: any) => {
+            .filter((d: NodeExt) => {
                 return neighbors.includes(d.id);
             })
             .attr('fill-opacity', 1);
@@ -128,7 +131,7 @@ export class RComponent implements OnInit {
 
         // set opacity of edges to 1
         this.edgesSelection
-            .filter((d: any) => {
+            .filter((d: EdgeExt) => {
                 return (neighbors.includes(d.source.id) && d.target.id == id) ||
                     (neighbors.includes(d.target.id) && d.source.id == id);
             })
@@ -136,7 +139,7 @@ export class RComponent implements OnInit {
 
         // set opacity of texts to 1
         this.textsSelection
-            .filter((d: any) => {
+            .filter((d: NodeExt) => {
                 return neighbors.includes(d.id);
             })
             .style('opacity', 1)
@@ -175,6 +178,9 @@ export class RComponent implements OnInit {
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
+
+        // TODO: Define ego 'center' node 
+        
 
         this.edgesSelection = edges.selectAll('.link')
             .data(this.edges)
@@ -253,11 +259,11 @@ export class RComponent implements OnInit {
         //.text(d => d.id)
 
         // Let's list the force we wanna apply on the network
-        const simulation = d3.forceSimulation<d3.SimulationNodeDatum & { id: string | number, label: string }>(this.nodes)
+        d3.forceSimulation<NodeExt>(this.nodes)
             .force('link',
-                d3.forceLink()
+                d3.forceLink<NodeExt, EdgeExt>()
                     // .strength(0.25)
-                    .id((d: any) => d.id)
+                    .id((d: NodeExt) => d.id)
                     .links(this.edges)
             )
             .force('r', 
@@ -276,21 +282,21 @@ export class RComponent implements OnInit {
 
     ticked() {
         this.edgesSelection
-            .attr('x1', d => d.source.x)
-            .attr('y1', d => d.source.y)
-            .attr('x2', d => d.target.x)
-            .attr('y2', d => d.target.y);
+            .attr('x1', (d: EdgeExt) => d.source.x)
+            .attr('y1', (d: EdgeExt) => d.source.y)
+            .attr('x2', (d: EdgeExt) => d.target.x)
+            .attr('y2', (d: EdgeExt) => d.target.y);
 
         this.nodesSelection
-            .attr('cx', d => d.x)
-            .attr('cy', d => d.y);
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y);
 
         this.buffersSelection
-            .attr('cx', d => d.x)
-            .attr('cy', d => d.y);
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y);
 
         this.textsSelection
-            .attr('x', d => d.x)
-            .attr('y', d => d.y);
+            .attr('x', (d: NodeExt) => d.x)
+            .attr('y', (d: NodeExt) => d.y);
     }
 }

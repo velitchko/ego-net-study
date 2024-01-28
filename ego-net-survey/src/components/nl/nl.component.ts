@@ -1,7 +1,9 @@
 import { Component, OnInit, Input } from '@angular/core';
 import * as d3 from 'd3';
-import { DataService } from '../../services/data.service';
+import { Node, Edge, DataService } from '../../services/data.service';
 
+type NodeExt =  Node & { x: number, y: number };
+type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
 @Component({
     selector: 'app-nl',
     templateUrl: './nl.component.html',
@@ -19,21 +21,21 @@ export class NlComponent implements OnInit {
         left: 20
     }
 
-    private nodes: Array<{ id: string | number, label: string }>;
-    private edges: Array<{ source: string | number, target: string | number, value: number }>;
+    private nodes: Array<NodeExt>;
+    private edges: Array<EdgeExt>;
 
     // d3 selections
-    private nodesSelection: d3.Selection<SVGCircleElement, any, any, any>;
-    private edgesSelection: d3.Selection<SVGLineElement, any, any, any>;
-    private buffersSelection: d3.Selection<SVGCircleElement, any, any, any>;
-    private textsSelection: d3.Selection<SVGTextElement, any, any, any>;
+    private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
+    private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
+    private buffersSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
+    private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService) {
-        this.nodes = this.dataService.getNodes();
-        this.edges = this.dataService.getEdges();
+        this.nodes = this.dataService.getNodes() as Array<NodeExt>;
+        this.edges = this.dataService.getEdges() as Array<EdgeExt>;
 
         this.nodesSelection = d3.select('#nl-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#nl-container').selectAll('line.link');
@@ -92,7 +94,6 @@ export class NlComponent implements OnInit {
         // set opacity of all no    des to 0.1
         this.nodesSelection
             .attr('fill-opacity', 0.1);
-
         
         // set opacity of all buffers to 0.1
         this.buffersSelection
@@ -111,9 +112,9 @@ export class NlComponent implements OnInit {
             .attr('fill-opacity', 1);
 
         // find targets or sourcdes of current node in this.edges
-        const neighbors = new Array<any>();
+        const neighbors = new Array<string | number>();
         
-        this.edges.forEach((d: any) => {
+        this.edges.forEach((d: EdgeExt) => {
             if(d.source.id === id) {
                 neighbors.push(d.target.id);
             } 
@@ -124,7 +125,7 @@ export class NlComponent implements OnInit {
 
         // set opacity of nodes to 1
         this.nodesSelection
-            .filter((d: any) => {
+            .filter((d: NodeExt) => {
                 // console.log(d)
                 return neighbors.includes(d.id);
             })
@@ -132,7 +133,7 @@ export class NlComponent implements OnInit {
 
         // set opacity of buffers to 1
         this.buffersSelection
-            .filter((d: any) => {
+            .filter((d: NodeExt) => {
                 return neighbors.includes(d.id);
             })
             .attr('fill-opacity', 1);
@@ -140,7 +141,7 @@ export class NlComponent implements OnInit {
         
         // set opacity of edges to 1
         this.edgesSelection
-            .filter((d: any) => {
+            .filter((d: EdgeExt) => {
                 return (neighbors.includes(d.source.id) && d.target.id == id) ||
                         (neighbors.includes(d.target.id) && d.source.id == id);
             })
@@ -148,7 +149,7 @@ export class NlComponent implements OnInit {
 
         // set opacity of texts to 1
         this.textsSelection
-            .filter((d: any) => {
+            .filter((d: NodeExt) => {
                 return neighbors.includes(d.id);
             })
             .style('opacity', 1)
@@ -194,8 +195,8 @@ export class NlComponent implements OnInit {
             .enter()
             .append('line')
             .attr('class', 'link')
-            .attr('stroke', d => this.colorFill(1)) // TODO: Define d.hop from original code
-            .attr('stroke-width', d => d.value);
+            .attr('stroke', (d: EdgeExt) => this.colorFill(1)) // TODO: Define d.hop from original code
+            .attr('stroke-width', (d: EdgeExt) => d.value);
 
         // Node Overlay (to space edges from nodes)
         const buffers = g.append('g')
@@ -218,10 +219,10 @@ export class NlComponent implements OnInit {
             .enter()
             .append('circle')
             .attr('class', 'node')
-            .attr('id', d => `node-${(d.id as string).replace('.', '')}`)
+            .attr('id', (d: NodeExt) => `node-${(d.id as string).replace('.', '')}`)
             .attr('r', 7)
-            .attr('stroke', d => this.colorStroke(1)) // TODO: Define d.hop from original code
-            .attr('fill', d => this.colorFill(1)) // TODO: Define d.hop from original code
+            .attr('stroke', (d: NodeExt) => this.colorStroke(1)) // TODO: Define d.hop from original code
+            .attr('fill', (d: NodeExt) => this.colorFill(1)) // TODO: Define d.hop from original code
             .attr('fill-opacity', 1)
             .style('cursor', 'pointer')
             .on('mouseover', this.mouseover.bind(this))
@@ -236,7 +237,7 @@ export class NlComponent implements OnInit {
             .enter()
             .append('text')
             .attr('class', 'label')
-            .attr('id', d => `label-${d.id}`)
+            .attr('id', (d: NodeExt) => `label-${d.id}`)
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'central')
             .attr('font-size', '6pt')
@@ -249,15 +250,15 @@ export class NlComponent implements OnInit {
         //.text(d => d.id)
 
         // Let's list the force we wanna apply on the network
-        const simulation = d3.forceSimulation<d3.SimulationNodeDatum & { id: string | number, label: string }>(this.nodes)
+        d3.forceSimulation<Node>(this.nodes)
             .force('link',
-                d3.forceLink()
+                d3.forceLink<NodeExt, EdgeExt>()
                     .strength(0.25)
-                    .id((d: any) => d.id)
+                    .id((d: NodeExt) => d.id)
                     .links(this.edges)
             )
             .force('charge',
-                d3.forceManyBody()
+                d3.forceManyBody<NodeExt>()
                     .strength(-200))
             .force('center',
                 d3.forceCenter(
@@ -268,21 +269,21 @@ export class NlComponent implements OnInit {
 
     ticked() {
         this.edgesSelection
-            .attr('x1', d => d.source.x)
-            .attr('y1', d => d.source.y)
-            .attr('x2', d => d.target.x)
-            .attr('y2', d => d.target.y);
+            .attr('x1', (d: EdgeExt) => d.source.x)
+            .attr('y1', (d: EdgeExt) => d.source.y)
+            .attr('x2', (d: EdgeExt) => d.target.x)
+            .attr('y2', (d: EdgeExt) => d.target.y);
 
         this.nodesSelection
-            .attr('cx', d => d.x)
-            .attr('cy', d => d.y);
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y);
 
         this.buffersSelection
-            .attr('cx', d => d.x)
-            .attr('cy', d => d.y);
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y);
 
         this.textsSelection
-            .attr('x', d => d.x)
-            .attr('y', d => d.y);
+            .attr('x', (d: NodeExt) => d.x)
+            .attr('y', (d: NodeExt) => d.y);
     }
 }

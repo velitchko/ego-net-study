@@ -22,22 +22,20 @@ export class MComponent implements OnInit {
     private cellSize = 20;
 
     private nodes: Array<Node>;
-    private edges: Array<Edge>;
     private matrix: Array<Cell>;
     private hops = [1, 2, 3, 4, 5];
     private radius = 50;
 
     // d3 selections
     private cellsSelection: d3.Selection<SVGRectElement, Cell, any, any>;
-    private rowsSelection: d3.Selection<SVGTextElement, any, any, any>;
-    private colsSelection: d3.Selection<SVGTextElement, any, any, any>;
+    private rowsSelection: d3.Selection<SVGTextElement, Node, any, any>;
+    private colsSelection: d3.Selection<SVGTextElement, Node, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService) {
         this.nodes = this.dataService.getNodes();
-        this.edges = this.dataService.getEdges();
         this.matrix = this.dataService.getMatrix();
 
         this.cellsSelection = d3.select('#m-container').selectAll('rect.node');
@@ -98,7 +96,7 @@ export class MComponent implements OnInit {
             .attr('fill-opacity', 1);
     }
 
-    mouseout($event: any, d: Cell): void {
+    mouseout(): void {
         this.cellsSelection
             .attr('fill', (d: Cell) => {
                 if (d.value > 0) {
