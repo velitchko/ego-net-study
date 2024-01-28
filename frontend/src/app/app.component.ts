@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { ResultsService } from 'src/services/results.service';
+import { Params, ResultsService } from '../services/results.service';
+import { GlobalErrorHandler } from '../services/error.service';
+import { retry } from 'rxjs';
+import { CONFIG } from '../assets/config';
 @Component({
   selector: 'app-root',
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent implements OnInit {
-  title = 'Ego Network Study';
-
-  protected hasErrored: boolean = false;
-  protected showError: { show: boolean, message: string, email: string } = { show: false, message: '', email: 'velitchko.filipov@tuwien.ac.at?subject=EgoNetStudyError&body=ERROR' };
-
-  constructor(private http: HttpClient, protected resultsService: ResultsService) {}
+  public title = 'Ego Network Study';
+  
+  constructor(private http: HttpClient, protected resultsService: ResultsService, private errorService: GlobalErrorHandler) {}
 
   next(result: any) {
     if (result) {
@@ -25,30 +25,19 @@ export class AppComponent implements OnInit {
     }
   }
 
-  error(err: Error) {
-    this.hasErrored = true;
-    this.showError.message = err.message;
-
-    console.error('🚒 Error: no params received from backend');
-    console.error(err);
-  }
-
-  dismiss() {
-    this.showError.show = false;
-    this.hasErrored = false;
-    console.log('👌 Dismissed error message');
-  }
-
-  viewMore() {
-    this.showError.show = true;
+  error(err: Error): void {
+    this.errorService.handleError(err)
   }
 
   ngOnInit() {
     // request params from backend
-    this.http.get('http://localhost:8080/params')
+    this.http.get<Params>(`${CONFIG.API_BASE}params`)
+      .pipe(
+        retry(3)
+      )
       .subscribe({
         next: this.next.bind(this),
-        error: this.error.bind(this),
+        error: this.error.bind(this)
       });
 
   }

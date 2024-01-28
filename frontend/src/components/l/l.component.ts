@@ -1,7 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import * as d3 from 'd3';
-import { DataService, Edge } from '../../services/data.service';
-
+import { GlobalErrorHandler } from '../../services/error.service';
 @Component({
     selector: 'app-l',
     templateUrl: './l.component.html',
@@ -34,9 +33,9 @@ export class LComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService) {
-        this.nodes = this.dataService.getNodes();
-        this.edges = this.dataService.getEdges();
+    constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
+        this.nodes = this.dataService.getNodes() as Array<NodeExt>;
+        this.edges = this.dataService.getEdges() as Array<EdgeExt>;
 
         this.nodesSelection = d3.select('#l-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#l-container').selectAll('line.link');
@@ -48,7 +47,11 @@ export class LComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.draw();
+        try {
+            this.draw();
+        } catch (error) {
+            this.errorService.handleError(error);
+        }   
     }
 
     color(hop: number): string {

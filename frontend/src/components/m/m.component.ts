@@ -1,6 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import * as d3 from 'd3';
 import { Node, DataService, Edge, Cell } from '../../services/data.service';
+import { GlobalErrorHandler } from '../../services/error.service';
 
 @Component({
     selector: 'app-m',
@@ -34,7 +35,7 @@ export class MComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService) {
+    constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
         this.nodes = this.dataService.getNodes();
         this.matrix = this.dataService.getMatrix();
 
@@ -45,8 +46,12 @@ export class MComponent implements OnInit {
         this.zoom = d3.zoom();
     }
 
-    ngOnInit(): void {
-        this.draw();
+    ngAfterViewInit(): void {
+        try {
+            this.draw();
+        } catch (error) {
+            this.errorService.handleError(error);
+        }
     }
 
     mouseover($event: MouseEvent): void {
