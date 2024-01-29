@@ -8,7 +8,7 @@ A study of multiple ego network representations.
 ## Getting Started
 Clone the repository
 ```console
-git clone https://github.com/velitchko/ego-net-study.git
+foo@bar:~$ git clone https://github.com/velitchko/ego-net-study.git
 ```
 
 ### Dependencies
