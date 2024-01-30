@@ -53,7 +53,8 @@ export class SurveyComponent {
             this.timer.start = Date.now();
             console.log('⏰ Survey started');
         });
-
+        // TODO: Save order of approaches in results before appending pages
+        // this.survey.pages.push(...this.resultsService.getApproaches());
         this.survey.onCurrentPageChanged.add((sender, options) => {
             // update end time and record result
             this.timer.end = Date.now();
@@ -61,6 +62,7 @@ export class SurveyComponent {
 
             // push to results
             this.resultsService.pushResult({
+                index: options.oldCurrentPage.visibleIndex,
                 time: time,
                 task: options.oldCurrentPage.name.split('-')[options.oldCurrentPage.name.split('-').length - 1],
                 // GET SUBSTRING FROM START TO options.newCurrentPage.name.split('-')[options.newCurrentPage.name.split('-').length - 1]
@@ -84,6 +86,7 @@ export class SurveyComponent {
 
             // push to results
             this.resultsService.pushResult({
+                index: -99,
                 time: 0,
                 task: 'qualitative-feedback',
                 representation: 'qualitative-feedback',

@@ -22,8 +22,8 @@ export class NlComponent implements OnInit {
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
-        this.nodes = this.dataService.getNodes() as Array<NodeExt>;
-        this.edges = this.dataService.getEdges() as Array<EdgeExt>;
+        this.nodes = this.dataService.getDatasetNodes('nodelink') as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges('nodelink') as Array<EdgeExt>;
 
         this.nodesSelection = d3.select('#nl-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#nl-container').selectAll('line.link');
@@ -264,6 +264,8 @@ export class NlComponent implements OnInit {
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        console.log(this.nodes);
 
         this.textsSelection
             .attr('x', (d: NodeExt) => d.x)

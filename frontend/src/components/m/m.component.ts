@@ -1,6 +1,6 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
-import { Node, DataService, Edge, Cell } from '../../services/data.service';
+import { Node, NodeExt, DataService, Edge, Cell } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
 import { CONFIG } from '../../assets/config';
 
@@ -24,8 +24,8 @@ export class MComponent implements AfterViewInit {
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
-        this.nodes = this.dataService.getNodes();
-        this.matrix = this.dataService.getMatrix();
+        this.nodes = this.dataService.getDatasetNodes('matrix') as Array<NodeExt>;
+        this.matrix = this.dataService.getDatasetMatrix('matrix');
 
         this.cellsSelection = d3.select('#m-container').selectAll('rect.node');
         this.rowsSelection = d3.select('#m-container').selectAll('text.label');
@@ -54,7 +54,7 @@ export class MComponent implements AfterViewInit {
 
         cells
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
-            .attr('fill-opacity', (d: Cell) => (d.value > 0 ? CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY : CONFIG.COLOR_CONFIG.NODE_OPACITY));
+            .attr('fill-opacity', (d: Cell) => (d.weight > 0 ? CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY : CONFIG.COLOR_CONFIG.NODE_OPACITY));
             
         // select current id and set opacity to 1
         d3.select(`#${id}`)
@@ -90,7 +90,7 @@ export class MComponent implements AfterViewInit {
     mouseout(): void {
         this.cellsSelection
             .attr('fill', (d: Cell) => {
-                if (d.value > 0) {
+                if (d.weight > 0) {
                     return CONFIG.COLOR_CONFIG.NODE;
                 }
                 return 'transparent';
@@ -146,11 +146,11 @@ export class MComponent implements AfterViewInit {
                 .attr('y', (d: Cell) => d.y * CONFIG.SIZE_CONFIG.CELL_SIZE)
                 .attr('width', CONFIG.SIZE_CONFIG.CELL_SIZE)
                 .attr('height', CONFIG.SIZE_CONFIG.CELL_SIZE)
-                .attr('fill', (d: Cell) => d.value > 0 ? CONFIG.COLOR_CONFIG.NODE : 'transparent')
+                .attr('fill', (d: Cell) => d.weight > 0 ? CONFIG.COLOR_CONFIG.NODE : 'transparent')
                 .attr('stroke', CONFIG.COLOR_CONFIG.NODE_STROKE)
                 .attr('stroke-width', CONFIG.SIZE_CONFIG.CELL_STROKE);
 
-        this.cellsSelection.filter((d: Cell) => d.value > 0)
+        this.cellsSelection.filter((d: Cell) => d.weight > 0)
                 .on('mouseover', this.mouseover.bind(this))
                 .on('mouseout', this.mouseout.bind(this));
 

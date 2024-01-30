@@ -28,13 +28,13 @@ export class RComponent implements OnInit {
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
-        this.nodes = this.dataService.getNodes() as Array<NodeExt>;
-        this.edges = this.dataService.getEdges() as Array<EdgeExt>;
+        this.nodes = this.dataService.getDatasetNodes('radial') as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges('radial') as Array<EdgeExt>;
 
-        this.nodesSelection = d3.select('#nl-container').selectAll('circle.node');
-        this.edgesSelection = d3.select('#nl-container').selectAll('line.link');
-        this.guidesSelection = d3.select('#nl-container').selectAll('circle.guide');
-        this.textsSelection = d3.select('#nl-container').selectAll('text.label');
+        this.nodesSelection = d3.select('#r-container').selectAll('circle.node');
+        this.edgesSelection = d3.select('#r-container').selectAll('line.link');
+        this.guidesSelection = d3.select('#r-container').selectAll('circle.guide');
+        this.textsSelection = d3.select('#r-container').selectAll('text.label');
 
         this.zoom = d3.zoom();
     }

@@ -1,10 +1,13 @@
 import { Injectable } from '@angular/core';
-import { DATA } from '../assets/miserables.js';
+import { DATA_NL } from '../assets/miserables.434827120503882069.20.js';
+import { DATA_M } from '../assets/miserables.2499354945414561156.19.js';
+import { DATA_R } from '../assets/miserables.3848446828006397221.35.js';
+import { DATA_L } from '../assets/miserables.8139397558749019675.37.js';
 
 
-export type Node = { id: string | number, label: string, index: number, group: number };
-export type Edge = { source: string | number, target: string | number, value: number };
-export type Cell = { source : string | number, target: string | number, value: number, x: number, y: number };
+export type Node = { id: string | number, label: string, index: number, ego: string | number, hop: number, weight: number, parent: string | number };
+export type Edge = { source: string | number, target: string | number, weight: number, ego: string | number, hop: number };
+export type Cell = { source : string | number, target: string | number, weight: number, x: number, y: number, ego: string | number, hop: number };
 export type NodeExt =  Node & { x: number, y: number };
 export type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
 @Injectable({
@@ -12,62 +15,64 @@ export type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
 })
 
 export class DataService {
-    private nodes: Array<Node>;
-    private edges: Array<Edge>;
-    private matrix: Array<Cell>;
+    
+    private datasets: Map<string, any> = new Map([
+        ['nodelink', DATA_NL],
+        ['matrix', DATA_M],
+        ['layered', DATA_L],
+        ['radial', DATA_R]
+    ]);
+
+    private parsedData: Map<string, { nodes: Array<Node>, edges: Array<Edge>, matrix: Array<Cell> }>;
 
     constructor() {
-        this.nodes = [];
-        this.edges = [];
-        this.matrix = [];
-
-        // parse data from json file in assets dir
-        this.parseData(DATA);
+        this.parsedData = new Map<string, { nodes: Array<Node>, edges: Array<Edge>, matrix: Array<Cell>}>();
+        // iterate over datasets and parse data from json file in assets dir
+        this.datasets.forEach((data: any, key: string) => {
+            const parsed = this.parseData(data);
+            this.parsedData.set(key, { nodes: parsed.nodes, edges: parsed.links, matrix: parsed.matrix });
+        });
+        
     }
 
-    setNodes(nodes: Array<Node>): void {
-        this.nodes = nodes;
+    getDatasetNodes(key: string): Array<Node> {
+        return this.parsedData.get(key)?.nodes.slice() || [];
     }
 
-    getNodes(): Array<Node> {
-        return this.nodes.slice();
+    getDatasetEdges(key: string): Array<Edge> {
+        return this.parsedData.get(key)?.edges.slice() || [];
     }
 
-    setEdges(edges: Array<Edge>): void {
-        this.edges = edges;
+    getDatasetMatrix(key: string): Array<Cell> {
+        return this.parsedData.get(key)?.matrix.slice() || [];
     }
 
-    getEdges(): Array<Edge> {
-        return this.edges.slice();
-    }
-
-    getMatrix(): Array<Cell> {
-        return this.matrix.slice();
-    }
-
-    addNode(node: Node): void {
-        this.nodes.push(node);
-    }
-
-    addEdge(edge: Edge): void {
-        this.edges.push(edge);
-    }
-
-    parseData(data: any): void {
+    parseData(data: any): { nodes: Array<Node>, links: Array<Edge>, matrix: Array<Cell> } {
         const nodes = data.nodes;
         const edges = data.links;
 
+        const parsedNodes = new Array<Node>();
+        const parsedEdges = new Array<Edge>();
+        const parsedMatrix = new Array<Cell>();
+
         // parse nodes
-        nodes.forEach((node: { id: string, group: number }, i: number) => {
-            this.addNode({
-                id: node.id, label: node.id, index: i, group: node.group
+        // id: string | number, label: string, index: number, ego: string | number, hop: number, weight: number, parent: string | number };
+        nodes.forEach((node: { id: string | number , ego: string | number, hop: number, weight: number, parent: string | number }, i: number) => {
+            parsedNodes.push({
+                id: node.id, 
+                label: `${node.id}`, 
+                index: i, 
+                hop: node.hop,
+                ego: node.ego,
+                weight: node.weight,
+                parent: node.parent
             });
         });
 
         // parse edges
         let edgeHash = new Map<string, Edge>();
-
-        edges.forEach((edge: { source: string, target: string, value: number }, i: number) => {
+        // { source: string | number, target: string | number, weight: number, ego: string | number, hop: number };
+        edges.forEach((edge: { source: string | number, target: string | number, weight: number, ego: string | number, hop: number }, i: number) => {
             let idA: string, idB: string = '';
             if (edge.source === edge.target) return;
 
@@ -77,26 +82,36 @@ export class DataService {
             edgeHash.set(idA, edge);
             edgeHash.set(idB, edge);
 
-            this.addEdge({
-                source: edge.source, target: edge.target, value: edge.value
+            parsedEdges.push({
+                source: edge.source, 
+                target: edge.target, 
+                weight: edge.weight,
+                ego: edge.ego,
+                hop: edge.hop
             });
         });
 
         // parse matrix
-        this.nodes.forEach((source: Node) => {
-            this.nodes.forEach((target: Node) => {
-                
+        parsedNodes.forEach((source: Node) => {
+            parsedNodes.forEach((target: Node) => {
                 let edge = `${source.id}-${target.id}`;
-                const edgeValue = edgeHash.get(edge)?.value;
 
-                this.matrix.push({
+                parsedMatrix.push({
                     source: source.id,
                     target: target.id,
                     x: source.index,
                     y: target.index,
-                    value: edgeValue === undefined ? 0 : edgeValue
+                    weight: edgeHash.has(edge) ? edgeHash.get(edge)?.weight || 0 : 0,
+                    ego: edgeHash.has(edge) ? edgeHash.get(edge)?.ego || 0 : 0,
+                    hop: edgeHash.has(edge) ? edgeHash.get(edge)?.hop || 0 : 0,
                 });
             });
-        });   
+        });  
+        
+        return {
+            nodes: parsedNodes,
+            links: parsedEdges,
+            matrix: parsedMatrix
+        };
     }
 }

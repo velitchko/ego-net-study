@@ -24,8 +24,8 @@ export class LComponent implements OnInit {
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
-        this.nodes = this.dataService.getNodes() as Array<NodeExt>;
-        this.edges = this.dataService.getEdges() as Array<EdgeExt>;
+        this.nodes = this.dataService.getDatasetNodes('layered') as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges('layered') as Array<EdgeExt>;
 
         this.nodesSelection = d3.select('#l-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#l-container').selectAll('line.link');
