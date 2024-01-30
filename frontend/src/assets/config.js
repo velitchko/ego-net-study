@@ -17,14 +17,25 @@ export const CONFIG = {
         NODE_STROKE: '#000000',
         EDGE_STROKE: '#000000',
         LABEL: '#ffffff',
-        EGO_HOPS: {
-            1: '#0000ff',
-            2: '#00ff00',
-            3: '#ff0000'
-        }
+        EGO_HOPS_FILL: {
+            '-1': '#000000',
+            '0': '#fc8d62',
+            '1': '#a6cee3',
+            '2': '#1f78b4',
+            '3': '#b2df8a',
+            '4': '#33a02c',
+        },
+        EGO_HOPS_STROKE: {
+            '-1': '#000000',
+            '0': '#000000',
+            '1': '#a6cee3',
+            '2': '#1f78b4',
+            '3': '#b2df8a',
+            '4': '#33a02c',
+        },
     },
     SIZE_CONFIG: {
-        NODE: 5,
+        NODE: 8,
         EDGE: 1,
         NODE_STROKE: 1,
         EDGE_STROKE: 1,

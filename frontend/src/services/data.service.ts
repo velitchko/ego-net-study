@@ -57,14 +57,14 @@ export class DataService {
 
         // parse nodes
         // id: string | number, label: string, index: number, ego: string | number, hop: number, weight: number, parent: string | number };
-        nodes.forEach((node: { id: string | number , ego: string | number, hop: number, weight: number, parent: string | number }, i: number) => {
+        nodes.forEach((node: { id: string | number , ego: string | number, hop: number, weighted: number, parent: string | number }, i: number) => {
             parsedNodes.push({
                 id: node.id, 
                 label: `${node.id}`, 
                 index: i, 
                 hop: node.hop,
                 ego: node.ego,
-                weight: node.weight,
+                weight: node.weighted,
                 parent: node.parent
             });
         });
