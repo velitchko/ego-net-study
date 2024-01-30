@@ -21,6 +21,7 @@ export type Params = {
 };
 
 export type Result = { 
+    index: number,
     time: number, 
     task: string, 
     representation: string, 
