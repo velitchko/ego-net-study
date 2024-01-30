@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { Node, NodeExt, Edge, EdgeExt, DataService } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
 import { CONFIG } from '../../assets/config';
+import { ColorService } from '../../services/color.util';
 
 @Component({
     selector: 'app-nl',
@@ -21,7 +22,7 @@ export class NlComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
+    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         this.nodes = this.dataService.getDatasetNodes('nodelink') as Array<NodeExt>;
         this.edges = this.dataService.getDatasetEdges('nodelink') as Array<EdgeExt>;
 
@@ -37,44 +38,6 @@ export class NlComponent implements OnInit {
             this.draw();
         } catch (error) {
             this.errorService.handleError(error);
-        }
-    }
-
-    colorFill(hop: number): string {
-        switch (hop) {
-            case -1:
-                return 'black';
-            case 0:
-                return '#fc8d62';
-            case 1:
-                return '#a6cee3';
-            case 2:
-                return '#1f78b4';
-            case 3:
-                return '#b2df8a';
-            case 4:
-                return '#33a02c';
-            default:
-                return 'black';
-        }
-    }
-
-    colorStroke(hop: number): string {
-        switch (hop) {
-            case -1:
-                return 'black';
-            case 0:
-                return 'black';
-            case 1:
-                return '#a6cee3';
-            case 2:
-                return '#1f78b4';
-            case 3:
-                return '#b2df8a';
-            case 4:
-                return '#33a02c';
-            default:
-                return 'black';
         }
     }
 
@@ -132,6 +95,7 @@ export class NlComponent implements OnInit {
                 return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
                         (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
             })
+            .attr('stroke-width', 2)
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_HIGHILIGHT_OPACITY);
 
@@ -148,11 +112,12 @@ export class NlComponent implements OnInit {
     mouseout() {
         // reset opacity
         this.nodesSelection
-            .attr('fill', CONFIG.COLOR_CONFIG.NODE)
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke', CONFIG.COLOR_CONFIG.EDGE_STROKE)
+            .attr('stroke-width', (d: EdgeExt) => d.weight)
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.textsSelection
@@ -188,8 +153,8 @@ export class NlComponent implements OnInit {
             .enter()
             .append('line')
             .attr('class', 'link')
-            .attr('stroke', (d: EdgeExt) => CONFIG.COLOR_CONFIG.EDGE_STROKE) // TODO: Define d.hop from original code
-            .attr('stroke-width', (d: EdgeExt) => CONFIG.SIZE_CONFIG.EDGE_STROKE) // TODO: Define weight from original code
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop)) 
+            .attr('stroke-width', (d: EdgeExt) => d.weight)
             .attr('stroke-opacity', 0);
 
         // Initialize the nodes
@@ -203,9 +168,9 @@ export class NlComponent implements OnInit {
             .attr('class', 'node')
             .attr('id', (d: NodeExt) => `node-${d.id.toString().replace('.', '')}`)
             .attr('r', CONFIG.SIZE_CONFIG.NODE)
-            .attr('stroke', (d: NodeExt) => CONFIG.COLOR_CONFIG.NODE_STROKE) // TODO: Define d.hop from original code
+            .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop)) 
             .attr('stroke-opacity', 0) // TODO: Define weight from original code
-            .attr('fill', (d: NodeExt) => CONFIG.COLOR_CONFIG.NODE) // TODO: Define d.hop from original code
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop)) 
             .attr('fill-opacity', 0)
             .style('cursor', 'pointer')
             .on('mouseover', this.mouseover.bind(this))
@@ -228,10 +193,7 @@ export class NlComponent implements OnInit {
             .attr('fill-opacity', 0)
             .style('pointer-events', 'none')
             .style('user-select', 'none')
-            .text(() => Math.floor(Math.random() * 99))
-        // .on('mouseover', this.mouseover.bind(this))
-        // .on('mouseout', this.mouseout.bind(this));
-        //.text(d => d.id)
+            .text((d: NodeExt) => d.id);
 
         // Let's list the force we wanna apply on the network
         d3.forceSimulation<Node>(this.nodes)
@@ -243,11 +205,14 @@ export class NlComponent implements OnInit {
             )
             .force('charge',
                 d3.forceManyBody<NodeExt>()
-                    .strength(-200))
+                    .strength(-300)
+            )
             .force('center',
                 d3.forceCenter(
                     (CONFIG.WIDTH) / 2.0,
-                    (CONFIG.HEIGHT) / 2.0))
+                    (CONFIG.HEIGHT) / 2.0)
+                    .strength(0.1)
+            )
             .on('end', this.ticked.bind(this));
     }
 
@@ -266,6 +231,7 @@ export class NlComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         console.log(this.nodes);
+        console.log(this.edges);
 
         this.textsSelection
             .attr('x', (d: NodeExt) => d.x)
