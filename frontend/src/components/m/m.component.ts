@@ -1,7 +1,8 @@
 import { AfterViewInit, Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
-import { Node, NodeExt, DataService, Edge, Cell } from '../../services/data.service';
+import { Node, NodeExt, DataService, Edge, Cell, EdgeExt } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
+import { ColorService } from '../../services/color.util';
 import { CONFIG } from '../../assets/config';
 
 @Component({
@@ -10,26 +11,33 @@ import { CONFIG } from '../../assets/config';
     styleUrls: ['./m.component.scss']
 })
 export class MComponent implements AfterViewInit {
-    private nodes: Array<Node>;
-    private matrix: Array<Cell>;
-    private hops = [1, 2, 3, 4, 5];
-    private radius = 50;
+    private nodes: Array<NodeExt>;
+    private edges: Array<EdgeExt>;
 
     // d3 selections
-    private cellsSelection: d3.Selection<SVGRectElement, Cell, any, any>;
-    private rowsSelection: d3.Selection<SVGTextElement, Node, any, any>;
-    private colsSelection: d3.Selection<SVGTextElement, Node, any, any>;
+    private cellsSelection: d3.Selection<SVGRectElement, EdgeExt, any, any>;
+    private rowsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
+    private colsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
+    private overlaySelection: d3.Selection<SVGRectElement, any, any, any>;
+    private xAxiesSelection: d3.Selection<any, any, any, any>;
+    private yAxiesSelection: d3.Selection<any, any, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
+    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         this.nodes = this.dataService.getDatasetNodes('matrix') as Array<NodeExt>;
-        this.matrix = this.dataService.getDatasetMatrix('matrix');
+        this.edges = this.dataService.getDatasetEdges('matrix') as Array<EdgeExt>;
+        this.nodes.sort((a: NodeExt, b: NodeExt) => {
+            return a.hop - b.hop;
+        });
 
         this.cellsSelection = d3.select('#m-container').selectAll('rect.node');
         this.rowsSelection = d3.select('#m-container').selectAll('text.label');
         this.colsSelection = d3.select('#m-container').selectAll('text.label');
+        this.overlaySelection = d3.select('#m-container').selectAll('rect.overlay');
+        this.xAxiesSelection = d3.select('#m-container').selectAll('g.x-axis');
+        this.yAxiesSelection = d3.select('#m-container').selectAll('g.y-axis');
 
         this.zoom = d3.zoom();
     }
@@ -50,12 +58,12 @@ export class MComponent implements AfterViewInit {
 
         // select all cells where source or target is the current node
         const cells = this.cellsSelection
-            .filter((d: Cell) => d.source.toString().replace('.', '') === source || d.target.toString().replace('.', '') === target);
+            .filter((d: EdgeExt) => d.source.toString().replace('.', '') === source || d.target.toString().replace('.', '') === target);
 
         cells
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
-            .attr('fill-opacity', (d: Cell) => (d.weight > 0 ? CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY : CONFIG.COLOR_CONFIG.NODE_OPACITY));
-            
+            .attr('fill-opacity', (d: EdgeExt) => (d.weight > 0 ? CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY : CONFIG.COLOR_CONFIG.NODE_OPACITY));
+
         // select current id and set opacity to 1
         d3.select(`#${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
@@ -84,12 +92,12 @@ export class MComponent implements AfterViewInit {
         cols
             .attr('font-weight', 'bold')
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
-            .attr('fill-opacity',  CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
     }
 
     mouseout(): void {
         this.cellsSelection
-            .attr('fill', (d: Cell) => {
+            .attr('fill', (d: EdgeExt) => {
                 if (d.weight > 0) {
                     return CONFIG.COLOR_CONFIG.NODE;
                 }
@@ -108,12 +116,55 @@ export class MComponent implements AfterViewInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
     }
 
+
+    range(size: number, startAt: number = 0): Array<number> {
+        return [...Array(size).keys()].map(i => i + startAt);
+    }
+
+    getEnds(orderedNodes: Array<Node>) {
+        let currentHop = 0;
+        let currentLength = 0;
+        let ends = new Array<any>();
+        let start = orderedNodes[0].id;
+        let end = orderedNodes[0].id;
+        for (const node of orderedNodes) {
+            const newHop = node.hop;
+            if (newHop == currentHop) {
+                currentLength++
+            } else {
+                ends.push({ 'startX': start, 'startY': start, 'end': end, 'hop': currentHop, 'height': currentLength, 'width': currentLength });
+                start = node.id;
+                currentHop = newHop;
+                currentLength = 1;
+            }
+            end = node.id;
+        };
+        ends.push({ 'startX': start, 'startY': start, 'end': end, 'hop': currentHop, 'height': currentLength, 'width': currentLength });
+        return ends;
+    }
+
+    getInbetweens(ends: Array<any>): Array<any> {
+        if (ends.length < 2) {
+            return ends;
+        }
+        for (const ind of this.range(ends.length - 1, 1)) {
+            const inBetweenA = {
+                'startX': ends[ind].startX, 'startY': ends[ind - 1].startY, 'hop': -1, 'height': ends[ind - 1].height, 'width': ends[ind].width
+            };
+            const inBetweenB = {
+                'startX': ends[ind - 1].startX, 'startY': ends[ind].startY, 'hop': -1, 'height': ends[ind].width, 'width': ends[ind - 1].height
+            };
+            ends.push(inBetweenA, inBetweenB);
+        }
+        return ends;
+    }
+
     draw(): void {
         // define zoom behavior 
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
-                d3.select('#m-container').selectAll('g')
+                d3.select('#m-container').select('#matrix')
                     .attr('transform', $event.transform);
             });
 
@@ -126,69 +177,99 @@ export class MComponent implements AfterViewInit {
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
-
-        // set up the scales
-        const x = d3.scaleBand().range([0, CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT]);
-        const y = d3.scaleBand().range([0, CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM]);
-
-        // set up the domains
+        const inbetweens = this.getInbetweens(this.getEnds(this.nodes));
 
         const matrix = g.append('g')
             .attr('id', 'matrix');
 
+        const x = d3.scaleBand()
+            .domain(this.nodes.map((d: Node) => d.id.toString()))
+            .range([0, CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT])
+            .padding(0.05);
+
+        const y = d3.scaleBand()
+            .domain(this.nodes.map((d: Node) => d.id.toString()))
+            .range([0, CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM])
+            .padding(0.05);
+
+        const xAxis = d3.axisBottom(x)
+            .tickSizeOuter(0)
+            .tickSizeInner(0);
+
+        const yAxis = d3.axisLeft(y)
+            .tickSizeOuter(0)
+            .tickSizeInner(0);
+
         this.cellsSelection = matrix.selectAll('.node')
-            .data(this.matrix)
+            .data(this.edges)
             .enter()
-                .append('rect')
-                .attr('class', 'node')
-                .attr('id', (d: Cell) => `cell-${(d.source as string).replace('.', '')}-${(d.target as string).replace('.', '')}`)
-                .attr('x', (d: Cell) => d.x * CONFIG.SIZE_CONFIG.CELL_SIZE) 
-                .attr('y', (d: Cell) => d.y * CONFIG.SIZE_CONFIG.CELL_SIZE)
-                .attr('width', CONFIG.SIZE_CONFIG.CELL_SIZE)
-                .attr('height', CONFIG.SIZE_CONFIG.CELL_SIZE)
-                .attr('fill', (d: Cell) => d.weight > 0 ? CONFIG.COLOR_CONFIG.NODE : 'transparent')
-                .attr('stroke', CONFIG.COLOR_CONFIG.NODE_STROKE)
-                .attr('stroke-width', CONFIG.SIZE_CONFIG.CELL_STROKE);
+            .append('rect')
+            .attr('class', 'node')
+            .attr('id', (d: EdgeExt) => `cell-${(d.source as string).replace('.', '')}-${(d.target as string).replace('.', '')}`)
+            .attr('x', (d: EdgeExt) => x(d.source.toString()) ?? 0)
+            .attr('y', (d: EdgeExt) => y(d.target.toString()) ?? 0)
+            .attr('width', x.bandwidth())
+            .attr('height', y.bandwidth())
+            .attr('fill', (d: EdgeExt) => {
+                return d.weight > 0 ? this.colorService.getFill(d.hop) : 'transparent';
+            })
+            .attr('rx', 2)
+            .attr('ry', 2)
+            .on('mouseover', this.mouseover.bind(this))
+            .on('mouseout', this.mouseout.bind(this)); 
 
-        this.cellsSelection.filter((d: Cell) => d.weight > 0)
-                .on('mouseover', this.mouseover.bind(this))
-                .on('mouseout', this.mouseout.bind(this));
+        const axisX = matrix.append('g')
+            .attr('class', 'xaxis')
+            .style('font-size', '6pt')
+            .attr('transform', `translate(0, ${CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM})`)
+            .call(xAxis)
 
-        const rowLabels = g.append('g')
-            .attr('id', 'row-labels');
+        this.xAxiesSelection = axisX
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em')
+            .attr('transform', 'rotate(-65)')
 
-        this.rowsSelection = rowLabels.selectAll('.row-label')
-            .data(this.nodes)
+        axisX.select('.domain')
+            .remove();
+
+        const axisY = matrix.append('g')
+            .attr('class', 'yaxis')
+            .style('font-size', '6pt')
+            .attr('transform', `translate(0, 0)`)
+            .call(yAxis)
+
+        this.yAxiesSelection = axisY
+            .selectAll('text')
+            .style('text-anchor', 'end')
+            .attr('dx', '-.8em')
+            .attr('dy', '.15em');
+
+            axisY.select('.domain')
+            .remove();
+
+        const overlay = matrix.append('g')
+            .attr('id', 'overlay');
+
+        this.overlaySelection = overlay.selectAll('.overlay')
+            .data(inbetweens)
             .enter()
-                .append('text')
-                .attr('class', 'row-label')
-                .attr('id', (d: Node) => `label-${(d.id as string).replace('.', '')}`)
-                .attr('font-size', CONFIG.SIZE_CONFIG.LABEL_SIZE)
-                .attr('text-anchor', 'start')
-                .attr('x', (d: Node) => d.index * CONFIG.SIZE_CONFIG.CELL_SIZE + 10) 
-                .attr('y', -CONFIG.SIZE_CONFIG.CELL_SIZE/4)
-                .attr('transform', (d: Node) => {
-                    return `rotate(-45, ${d.index * CONFIG.SIZE_CONFIG.CELL_SIZE + 10}, ${-CONFIG.SIZE_CONFIG.CELL_SIZE/4})`;
-                })
-                .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
-                .text((d: Node) => d.id);
-
-        const columnLabels = g.append('g')
-            .attr('id', 'col-labels');
-
-        this.colsSelection = columnLabels.selectAll('.col-label')
-            .data(this.nodes)
-            .enter()
-                .append('text')
-                .attr('class', 'col-label')
-                .attr('id', (d: Node) => `label-${(d.id as string).replace('.', '')}`)
-                .attr('y', (d: Node) => d.index * CONFIG.SIZE_CONFIG.CELL_SIZE + 10)
-                .attr('x', -CONFIG.SIZE_CONFIG.CELL_SIZE/4)
-                .attr('text-anchor', 'end')
-                .attr('dominant-baseline', 'top')
-                .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
-                .attr('font-size', CONFIG.SIZE_CONFIG.LABEL_SIZE)
-                .text((d: Node) => d.id);       
+            .append('rect')
+            .attr('class', 'overlay')
+            .attr('x', (d: any) => x(d.startX) ?? 0)
+            .attr('y', (d: any) => y(d.startY) ?? 0)
+            .attr('width', (d: any) => d.width * 1.05 * x.bandwidth())
+            .attr('height', (d: any) => d.height * 1.05 * y.bandwidth())
+            .attr('fill', 'transparent')
+            .attr('stroke', (d: any) => this.colorService.getStroke(d.hop))
+            .attr('stroke-width', CONFIG.SIZE_CONFIG.CELL_STROKE)
+            .attr('stroke-dasharray', (d: any) => {
+                return d.hop < 0 ? '5,5' : 'none';
+            })
+            .attr('rx', 2)
+            .attr('ry', 2)
+            .style('pointer-events', 'none');
     }
 
 }
