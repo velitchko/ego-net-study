@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { Node, NodeExt, Edge, EdgeExt, DataService } from '../../services/data.service';
 import { CONFIG } from '../../assets/config';
 import { GlobalErrorHandler } from '../../services/error.service';
+import { ColorService } from '../../services/color.util';
 @Component({
     selector: 'app-l',
     templateUrl: './l.component.html',
@@ -11,21 +12,23 @@ import { GlobalErrorHandler } from '../../services/error.service';
 export class LComponent implements OnInit {
     private nodes: Array<NodeExt>;
     private edges: Array<EdgeExt>;
-    private hops = [1, 2, 3, 4, 5];
-    private radius = 50;
-
+    private hops: Array<number>;
+    private weightMin: number;
+    
     // d3 selections
-    private nodesSelection: d3.Selection<SVGCircleElement, d3.HierarchyNode<NodeExt>, any, any>;
-    private edgesSelection: d3.Selection<SVGPathElement, d3.HierarchyLink<NodeExt>, any, any>;
-    private guidesSelection: d3.Selection<SVGCircleElement, any, any, any>;
-    private textsSelection: d3.Selection<SVGTextElement, d3.HierarchyNode<NodeExt>, any, any>;
+    private nodesSelection: d3.Selection<SVGCircleElement,NodeExt, any, any>;
+    private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
+    private guidesSelection: d3.Selection<SVGLineElement, number, any, any>;
+    private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
+    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         this.nodes = this.dataService.getDatasetNodes('layered') as Array<NodeExt>;
         this.edges = this.dataService.getDatasetEdges('layered') as Array<EdgeExt>;
+        this.hops = Array.from(new Set(this.nodes.map((d: NodeExt) => d.hop)));
+        this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
 
         this.nodesSelection = d3.select('#l-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#l-container').selectAll('line.link');
@@ -41,27 +44,6 @@ export class LComponent implements OnInit {
         } catch (error) {
             this.errorService.handleError(error);
         }   
-    }
-
-    color(hop: number): string {
-        switch (hop) {
-            case -1:
-                return 'black';
-            case 0:
-                return 'black';
-            case 1:
-                return 'red';
-            case 2:
-                return 'blue';
-            case 3:
-                return 'turquoise';
-            case 4:
-                return 'pink';
-            case 5:
-                return 'green';
-            default:
-                return 'black';
-        }
     }
 
     mouseover($event: MouseEvent) {
@@ -105,26 +87,26 @@ export class LComponent implements OnInit {
 
         // set opacity of nodes to 1
         this.nodesSelection
-            .filter((d: d3.HierarchyNode<NodeExt>) => {
+            .filter((d: NodeExt) => {
                 // console.log(d)
-                return neighbors.includes(d.data.id.toString().replace('.', ''));
+                return neighbors.includes(d.id.toString().replace('.', ''));
             })
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
         
         // set opacity of edges to 1
         this.edgesSelection
-            .filter((d: d3.HierarchyLink<NodeExt>) => {
+            .filter((d: EdgeExt) => {
                 // check if source or target is in neighbors or if source or target are the current node
-                return neighbors.includes(d.source.data.id.toString().replace('.', '')) || neighbors.includes(d.target.data.id.toString().replace('.', ''));
+                return neighbors.includes(d.source.id.toString().replace('.', '')) || neighbors.includes(d.target.id.toString().replace('.', ''));
             })
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_HIGHILIGHT_OPACITY);
 
         // set opacity of texts to 1
         this.textsSelection
-            .filter((d: d3.HierarchyNode<NodeExt>) => {
-                return neighbors.includes(d.data.id.toString().replace('.', ''));
+            .filter((d: NodeExt) => {
+                return neighbors.includes(d.id.toString().replace('.', ''));
             })
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
@@ -152,7 +134,7 @@ export class LComponent implements OnInit {
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
-                d3.select('#r-container').selectAll('g')
+                d3.select('#L-container').selectAll('g')
                     .attr('transform', $event.transform);
             });
 
@@ -163,78 +145,113 @@ export class LComponent implements OnInit {
 
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
-
-        const root = d3.stratify<NodeExt>()
-            .id((d: any) => d.id)
-            .parentId((d: any) => d.parent)
-            (this.nodes);
-
-        const dx = 10;
-        const dy = CONFIG.WIDTH / (root.height + 1);
-
-        const tree = d3.tree<NodeExt>().nodeSize([dx, dy]);
-        // Sort the tree and apply the layout.
-        root.sort(((a: any, b: any) => d3.descending(a.data.weighted, b.data.weighted)));
-        tree(root);
-
-        // Compute the extent of the tree. Note that x and y are swapped here
-        // because in the tree layout, x is the breadth, but when displayed, the
-        // tree extends right rather than down.
-        let x0 = Infinity;
-        let x1 = -x0;
-        root.each((d: any) => {
-            if (d.x > x1) x1 = d.x;
-            if (d.x < x0) x0 = d.x;
-        });
-
-        // Compute the adjusted height of the tree.
-        const height = x1 - x0 + dx * 2;
-
-        const edges = g.append('g')
-            .attr('id', 'links');
-
-        const pathGenerator = d3.linkHorizontal<d3.HierarchyLink<NodeExt>, d3.HierarchyNode<NodeExt>>()
-            .x((d: d3.HierarchyNode<NodeExt>) => d.data.y)
-            .y((d: d3.HierarchyNode<NodeExt>) => d.data.x);
         
-        this.edgesSelection = edges.selectAll('.link')
-        .data(root.links())
-        .enter()
-        .append('path')
-        .attr('fill', 'none')
-        .attr('class', 'link')
-        .attr('stroke', '#555')
-        .attr('stroke-opacity', 0.4)
-        .attr('stroke-width', 1.5)
-            .attr('d', (d: d3.HierarchyLink<NodeExt>) => pathGenerator(d));
+        const link = g.append('g')
+            .attr('class', 'links');
 
-        const nodes = g.append('g')
-            .attr('id', 'nodes');
+        this.edgesSelection = link
+            .selectAll('line')
+            .data(this.edges)
+            .enter()
+            .append('line')
+            .attr('class', 'link')
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight);
         
-        this.nodesSelection = nodes.selectAll('.node')
-            .data(root.descendants())
+        const guides = g.append('g')
+            .attr('class', 'guides');
+
+        this.guidesSelection = guides
+            .selectAll('line')
+            .data(this.hops)
+            .enter()
+            .append('line')
+            .attr('class', 'guide')
+            .attr('stroke-dasharray', '5,5')
+            .attr('stroke', 'gray')
+            .attr('stroke-width', 1)
+            .attr('pointer-events', 'none')
+            .attr('x1', 0)
+            .attr('y1', (d: number) => d * 200)
+            .attr('x2', CONFIG.WIDTH)
+            .attr('y2', (d: number) => d * 200);
+
+        const node = g.append('g')
+            .attr('class', 'nodes');
+        
+        this.nodesSelection = node
+            .selectAll('circle')
+            .data(this.nodes)
             .enter()
             .append('circle')
             .attr('class', 'node')
-            .attr('stroke-linejoin', 'round')
-            .attr('stroke-width', 3)
-            .attr('fill', '#fff') // TODO: Define d.hop from original code
-            .attr('r', 2.5)
-            .attr('transform', (d: d3.HierarchyNode<NodeExt>) => `translate(${d.data.y},${d.data.x})`);
+            .attr('id', (d: NodeExt) => `node-${d.id}`)
+            .attr('r', CONFIG.SIZE_CONFIG.NODE)
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY)
+            .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop))
+            .attr('stroke-width', 1)
+            .attr('pointer-events', 'all')
+            .on('mouseover', this.mouseover.bind(this))
+            .on('mouseout', this.mouseout.bind(this));
 
-        const labels = g.append('g')
-            .attr('id', 'labels');
+        const label = g.append('g')
+            .attr('class', 'labels');
 
-        this.textsSelection = labels.selectAll('.label')
-            .data(root.descendants())
+        this.textsSelection = label
+            .selectAll('text')
+            .data(this.nodes)
             .enter()
             .append('text')
             .attr('class', 'label')
-            .attr('dy', '0.31em')
-            .attr('x', d => d.children ? -6 : 6)
-            .attr('text-anchor', d => d.children ? 'end' : 'start')
-            .text((d: d3.HierarchyNode<NodeExt>) => d.data.id)
-            .clone(true).lower()
-            .attr('stroke', 'white');
+            .attr('id', (d: NodeExt) => `label-${d.id}`)
+            .text((d: NodeExt) => d.id)
+            .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY)
+            .attr('font-size', CONFIG.SIZE_CONFIG.LABEL)
+            .attr('text-anchor', 'middle')
+            .attr('dominant-baseline', 'central')
+            .attr('pointer-events', 'none');
+
+        // simulation
+        d3.forceSimulation<Node>(this.nodes)
+            .force('link',
+                d3.forceLink<NodeExt, EdgeExt>()
+                    .strength(0.1)
+                    .id((d: NodeExt) => d.id)
+                    .links(this.edges)
+            )
+            .force('linear',
+                d3.forceY((d: NodeExt) => d.hop * 200)
+                .strength(3)
+            )
+            .force('charge',
+                d3.forceManyBody()
+                .strength(-300)
+            )
+            .on('end', this.ticked.bind(this));
+    } 
+
+    ticked() {
+        this.edgesSelection
+            .attr('x1', (d: EdgeExt) => d.source.x)
+            .attr('y1', (d: EdgeExt) => d.source.y)
+            .attr('x2', (d: EdgeExt) => d.target.x)
+            .attr('y2', (d: EdgeExt) => d.target.y)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
+
+        this.nodesSelection
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        console.log(this.nodes);
+        console.log(this.edges);
+
+        this.textsSelection
+            .attr('x', (d: NodeExt) => d.x)
+            .attr('y', (d: NodeExt) => d.y)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 }
