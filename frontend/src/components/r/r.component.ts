@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { Node, Edge, DataService } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
 import { CONFIG } from '../../assets/config';
+import { ColorService } from '../../services/color.util';
 
 type NodeExt =  Node & { x: number, y: number };
 type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
@@ -15,9 +16,10 @@ type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
 export class RComponent implements OnInit {
     private nodes: Array<NodeExt>;
     private edges: Array<EdgeExt>;
-    private hops = [1, 2, 3, 4, 5];
-    private radius = 50;
-
+    private hops: Array<number>;
+    private hopMax: number;
+    private radius: number;
+    
     // d3 selections
     private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
@@ -27,9 +29,12 @@ export class RComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler) {
+    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         this.nodes = this.dataService.getDatasetNodes('radial') as Array<NodeExt>;
         this.edges = this.dataService.getDatasetEdges('radial') as Array<EdgeExt>;
+        this.hops = this.nodes.map((d: NodeExt) => d.hop);
+        this.hopMax = Math.max(...this.hops);
+        this.radius = Math.min(CONFIG.WIDTH, CONFIG.HEIGHT) / (2 * this.hopMax);
 
         this.nodesSelection = d3.select('#r-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#r-container').selectAll('line.link');
@@ -44,27 +49,6 @@ export class RComponent implements OnInit {
             this.draw();
         } catch (error) {
             this.errorService.handleError(error);
-        }
-    }
-
-    color(hop: number): string {
-        switch (hop) {
-            case -1:
-                return 'black';
-            case 0:
-                return 'black';
-            case 1:
-                return 'red';
-            case 2:
-                return 'blue';
-            case 3:
-                return 'turquoise';
-            case 4:
-                return 'pink';
-            case 5:
-                return 'green';
-            default:
-                return 'black';
         }
     }
 
@@ -172,33 +156,28 @@ export class RComponent implements OnInit {
         const edges = g.append('g')
             .attr('id', 'links');
 
-        // TODO: Define ego 'center' node 
-        
-
         this.edgesSelection = edges.selectAll('.link')
             .data(this.edges)
             .enter()
             .append('line')
-            .attr('class', 'link')
-            .attr('stroke', (d: EdgeExt) => CONFIG.COLOR_CONFIG.EDGE) // TODO: Define d.hop from original code
-            .attr('stroke-opacity', 0)
-            .attr('stroke-width', (d: EdgeExt) => CONFIG.SIZE_CONFIG.EDGE_STROKE) // TODO: Define d.hop from original code;
-
+            .attr('stroke-width', 1)
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
         // Guides
         const guides = g.append('g')
             .attr('id', 'guides')
 
-        this.guidesSelection = guides.selectAll('.guide')
-            .selectAll('.guide')
+        this.guidesSelection = guides
+            .selectAll('circle')
             .data(this.hops)
             .enter()
             .append('circle')
             .attr('stroke-width', 1)
             .attr('fill', 'transparent')
             .attr('class', 'guide')
-            .attr('r', d => d * this.radius)
-            .attr('stroke-dasharray', `5, 5`)
-            .attr('stroke', 'rgba(0, 0, 0, 0.2)')
+            .attr('r', (d: number) => d * this.radius)
+            .attr('stroke-width', 1)
+            .attr('stroke-dasharray', '5, 5')
+            .attr('stroke', 'gray')
             .attr('cx', CONFIG.WIDTH / 2)
             .attr('cy', CONFIG.HEIGHT / 2);
 
@@ -212,10 +191,10 @@ export class RComponent implements OnInit {
             .attr('class', 'node')
             .attr('id', (d: NodeExt) => `node-${d.id.toString().replace('.', '')}`)
             .attr('r', 7)
-            .attr('stroke', (d: NodeExt) => CONFIG.COLOR_CONFIG.NODE_STROKE) // TODO: Define d.hop from original code
+            .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', 0)
             .attr('stroke-width', CONFIG.SIZE_CONFIG.NODE_STROKE)
-            .attr('fill', (d: NodeExt) => CONFIG.COLOR_CONFIG.NODE) // TODO: Define d.hop from original code
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
             .attr('fill-opacity', 0)
             .style('cursor', 'pointer')
             .on('mouseover', this.mouseover.bind(this))
@@ -252,7 +231,7 @@ export class RComponent implements OnInit {
                     .links(this.edges)
             )
             .force('r', 
-            d3.forceRadial(d => 1 * this.radius, CONFIG.WIDTH/2, CONFIG.HEIGHT/2)
+            d3.forceRadial((d: NodeExt) => d.hop * this.radius, CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2)
                 .strength(5)
             )
             .force('charge',
