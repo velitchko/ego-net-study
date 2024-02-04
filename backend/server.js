@@ -13,10 +13,33 @@ const taskDescriptions = new Map([
     ['t4', 'find a node\'s neighbors\' neighbors\' neighbors'],
     ['t5', 'find a node\'s neighbors\' neighbors\' neighbors\' neighbors']
 ]);
+
+// check the length of the files in the data dir and assign task accordingly 
+// keep track of number of results per task to guarantee at least 48 submissions exist for each task 
+const taskThresholdMap = new Map([
+    ['t1', 48],
+    ['t2', 48],
+    ['t3', 48],
+    ['t4', 48],
+    ['t5', 48]
+]);
+
 const squaresMap = new Map();
 
 // create a tracker for every user that visits the site
 let userTracker = new Map();
+
+// 0: NL L R M
+// 1: M NL L R
+// 2: R M NL L
+// 3: L R M NL
+// create a map of squares based on the above pattern
+const squares = new Map([
+    [0, ['nodelink', 'layered', 'radial', 'matrix' ]],
+    [1, ['matrix', 'nodelink', 'layered', 'radial' ]],
+    [2, ['radial', 'matrix', 'nodelink', 'layered' ]],
+    [3, ['layered', 'radial', 'matrix', 'nodelink' ]]
+]);
 
 generateLatinSquares = () => {
     console.log('🔢 Generating Latin Squares...');
@@ -36,16 +59,6 @@ generateLatinSquares = () => {
         }
         squaresMap.set(participantIndex, squares);
     }
-
-    squaresMap.forEach((squares, participantIndex) => {
-        console.log('Participant', participantIndex);
-        squares.forEach((square, index) => {
-            console.log('Square', index);
-            square.forEach((cell) => {
-                console.log(cell);
-            });
-        });
-    });
 }
 
 app.use(express.json());
@@ -56,30 +69,43 @@ app.get('/params', (req, res) => {
     let user = uuid.v4();
 
     let randomEgoNetApproaches, randomTaskCode; 
-
-    // get random order of ego-net approaches
-    randomEgoNetApproaches = egoNetApproaches.sort(() => Math.random() - 0.5);
-
-    // select a random task code
-    randomTaskCode = taskCodes[Math.floor(Math.random() * taskCodes.length)];
-
-    console.log(userTracker.size % 5);
-    // calculate participant index
-    const square = squaresMap.get(userTracker.size % 5);
-    console.log(square);
     
+    // get random order of ego-net approaches
+    randomEgoNetApproaches = squares.get(userTracker.size % 4);
+
+    randomTaskCode = taskCodes[0]; // start with t1
+    
+    // get list of file names in logs directory
+    let files = fs.readdirSync(`${__dirname}/logs`);
+    // get array of file names
+    let fileNames = files.map(file => file.split('-')[1].split('.')[0]);
+
+    taskThresholdMap.forEach((threshold, task) => {
+        const taskCount = fileNames.filter(fileName => fileName.includes(task)).length;
+
+        if(taskCount >= threshold) {
+            randomTaskCode = taskCodes[taskCodes.indexOf(task) + 1] || taskCodes[0];
+            console.log('📁 File count:', taskCount)
+            console.log('📈 Threshold reached for task:', task);
+            console.log('📈 Moving to next task...', randomTaskCode);
+        }
+    });
+
     userTracker.set(user, {
         egoNetApproaches: randomEgoNetApproaches,
         taskCode: randomTaskCode,
         taskDescription: taskDescriptions
     });
-
+    
     let params = {
         user: user,
         egoNetApproaches: randomEgoNetApproaches,
         taskCode: randomTaskCode,
         taskDescription: taskDescriptions.get(randomTaskCode)
     };
+    // write id and params to file
+    fs.writeFileSync(`${__dirname}/logs/logs-${randomTaskCode}-${user}.json`, JSON.stringify(params));
+
     console.log('🔍 Query parameters:', params);
 
     res.send({
@@ -90,7 +116,7 @@ app.get('/params', (req, res) => {
 });
 
 app.post('/results', (req, res) => {
-    filePath = __dirname + '/data/data-' + req.body.params.user + '.json';
+    filePath = `${__dirname}/data/data-${req.body.params.taskCode}-${req.body.params.user}.json`;
     console.log('📝 Writing to file...', filePath);
 
     fs.writeFileSync(filePath, JSON.stringify(req.body.results));
