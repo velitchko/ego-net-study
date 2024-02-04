@@ -26,6 +26,11 @@ export type Result = {
     task: string, 
     representation: string, 
     answer: string | number | QualitativeAnswer 
+} | {
+    index: number,
+    time: number,
+    order: Array<string>,
+    task: string,
 };
 @Injectable({
     providedIn: 'root'
@@ -58,6 +63,14 @@ export class ResultsService {
 
     setUserParams(params: Params): void {
         this.params = params;
+
+        // add metadata to results
+        this.results.push({
+            index: -99,
+            time: 0,
+            order: this.params.egoNetApproaches,
+            task: this.params.taskCode
+        });
     }
 
     getUserParams(): Params | null {
