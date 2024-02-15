@@ -76,20 +76,34 @@ app.get('/params', (req, res) => {
     randomTaskCode = taskCodes[0]; // start with t1
     
     // get list of file names in logs directory
-    let files = fs.readdirSync(`${__dirname}/logs`);
+    let logFiles = fs.readdirSync(`${__dirname}/logs`);
+    let submissionFiles = fs.readdirSync(`${__dirname}/data`);
+
     // get array of file names
-    let fileNames = files.map(file => file.split('-')[1].split('.')[0]);
+    let logFileNames = logFiles.map(file => file.split('-')[1].split('.')[0]);
+    let submissionFileNames = submissionFiles.map(file => file.split('-')[1]);
+    console.log('🪵 Log files:', logFileNames);
+    console.log('🗄️ Submission files:', submissionFileNames);
 
     taskThresholdMap.forEach((threshold, task) => {
-        const taskCount = fileNames.filter(fileName => fileName.includes(task)).length;
-
-        if(taskCount >= threshold) {
+        console.log('🔢 Task:', task, threshold);
+        const logTaskCount = logFileNames.filter(fileName => fileName.includes(task)).length;
+        const submissionTaskCount = submissionFileNames.filter(fileName => fileName.includes(task)).length;
+        
+        // Cross validate with submission count of the respective task
+        if (Math.min(logTaskCount, submissionTaskCount) >= threshold) {
+            // if log count is greater than or equal to threshold
+            // check if submission count is greater than or equal to threshold -> move to next
             randomTaskCode = taskCodes[taskCodes.indexOf(task) + 1] || taskCodes[0];
-            console.log('📁 File count:', taskCount)
+            console.log(`📁 File count Task ${task}: Logs(${logTaskCount}), Submissions(${submissionTaskCount})`);
             console.log('📈 Threshold reached for task:', task);
-            console.log('📈 Moving to next task...', randomTaskCode);
-        }
+            console.log('➡️ Moving to next task...', randomTaskCode);
+        } 
     });
+
+    console.log('🔢 Random ego-net approaches:', randomEgoNetApproaches);
+    console.log('🔢 Random task code:', randomTaskCode);
+
 
     userTracker.set(user, {
         egoNetApproaches: randomEgoNetApproaches,
