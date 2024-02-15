@@ -98,6 +98,7 @@ export class SurveyComponent {
                 if (res) {
                     console.log(res);
                     this.completed = true;
+                    window.open('https://google.com', '_blank'); // TODO: Update with prolific link
                 } else {
                     console.error('🚒 Error: no response received from backend');
                 }
