@@ -88,18 +88,18 @@ export class LComponent implements OnInit {
         // set opacity of nodes to 1
         this.nodesSelection
             .filter((d: NodeExt) => {
-                // console.log(d)
                 return neighbors.includes(d.id.toString().replace('.', ''));
             })
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
-        
+
         // set opacity of edges to 1
         this.edgesSelection
             .filter((d: EdgeExt) => {
-                // check if source or target is in neighbors or if source or target are the current node
-                return neighbors.includes(d.source.id.toString().replace('.', '')) || neighbors.includes(d.target.id.toString().replace('.', ''));
+                return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
+                    (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
             })
+            .attr('stroke-width', 2)
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_HIGHILIGHT_OPACITY);
 
@@ -116,12 +116,14 @@ export class LComponent implements OnInit {
     mouseout() {
         // reset opacity
         this.nodesSelection
-            .attr('fill', CONFIG.COLOR_CONFIG.NODE)
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke', CONFIG.COLOR_CONFIG.EDGE_STROKE)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
+
 
         this.textsSelection
             .attr('font-weight', 'normal')
@@ -134,7 +136,7 @@ export class LComponent implements OnInit {
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
-                d3.select('#L-container').selectAll('g')
+                d3.select('#l-container').selectAll('g')
                     .attr('transform', $event.transform);
             });
 
@@ -156,7 +158,8 @@ export class LComponent implements OnInit {
             .append('line')
             .attr('class', 'link')
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight);
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
+            .attr('stroke-opacity', 0);
         
         const guides = g.append('g')
             .attr('class', 'guides');
@@ -188,9 +191,10 @@ export class LComponent implements OnInit {
             .attr('id', (d: NodeExt) => `node-${d.id}`)
             .attr('r', CONFIG.SIZE_CONFIG.NODE)
             .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
-            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY)
+            .attr('fill-opacity', 0)
             .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-width', 1)
+            .attr('stroke-opacity', 0)
             .attr('pointer-events', 'all')
             .on('mouseover', this.mouseover.bind(this))
             .on('mouseout', this.mouseout.bind(this));
@@ -204,14 +208,15 @@ export class LComponent implements OnInit {
             .enter()
             .append('text')
             .attr('class', 'label')
-            .attr('id', (d: NodeExt) => `label-${d.id}`)
-            .text((d: NodeExt) => d.id)
-            .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
-            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY)
-            .attr('font-size', CONFIG.SIZE_CONFIG.LABEL)
+            .attr('id', (d: NodeExt) => `label-${d.id.toString().replace('.', '')}`)
             .attr('text-anchor', 'middle')
             .attr('dominant-baseline', 'central')
-            .attr('pointer-events', 'none');
+            .attr('font-size', CONFIG.SIZE_CONFIG.LABEL_SIZE)
+            .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
+            .attr('fill-opacity', 0)
+            .style('pointer-events', 'none')
+            .style('user-select', 'none')
+            .text((d: NodeExt) => d.id);
 
         // simulation
         d3.forceSimulation<Node>(this.nodes)
@@ -227,7 +232,7 @@ export class LComponent implements OnInit {
             )
             .force('charge',
                 d3.forceManyBody()
-                .strength(-300)
+                .strength(-200)
             )
             .on('end', this.ticked.bind(this));
     } 
@@ -245,9 +250,6 @@ export class LComponent implements OnInit {
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
-
-        console.log(this.nodes);
-        console.log(this.edges);
 
         this.textsSelection
             .attr('x', (d: NodeExt) => d.x)
