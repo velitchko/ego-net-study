@@ -69,6 +69,66 @@ export class MComponent implements AfterViewInit {
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
 
+        // from xAxiesSelection select the current node and set font-weight to bold
+        d3.select('#xaxis').selectAll('.tick')
+            .each((d: any, i: number, nodes: any) => {
+                // find and select the node with d 
+                if (d.toString().replace('.', '') === source) {
+                    d3.select(nodes[i])
+                        .select('text')
+                        .attr('font-weight', '800')
+                        .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+                        .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+                }
+            });
+
+        d3.select('#yaxis').selectAll('.tick')
+            .each((d: any, i: number, nodes: any) => {
+                // find and select the node with d 
+                if (d.toString().replace('.', '') === target) {
+                    d3.select(nodes[i])
+                        .select('text')
+                        .attr('font-weight', '800')
+                        .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+                        .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+                }
+            });
+        // .attr('font-weight', 'bold')
+        // .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+        // .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+
+        // get x and y position of the current cell
+        const x = d3.select(`#${id}`).attr('x');
+        const y = d3.select(`#${id}`).attr('y');
+
+        // get width and height of the current cell
+        const width = d3.select(`#${id}`).attr('width');
+        const height = d3.select(`#${id}`).attr('height');
+
+        // draw rectangle from x and y position to the end of the row and column
+        const crosshair = d3.select('#m-container')
+            .select('#matrix')
+            .append('g')
+            .attr('id', 'crosshair');
+
+        crosshair.append('rect')
+            .attr('x', x)
+            .attr('y', 0)
+            .attr('width', width)
+            .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY);
+
+        crosshair.append('rect')
+            .attr('x', 0)
+            .attr('y', y)
+            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
+            .attr('height', height)
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY);
+
+        crosshair.lower();
+
         // set all labels opacity to 0.1
         this.rowsSelection
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
@@ -96,12 +156,23 @@ export class MComponent implements AfterViewInit {
     }
 
     mouseout(): void {
+        // remove crosshair
+        d3.select('#crosshair').remove();
+
+        // reset axis labels
+        this.xAxiesSelection
+            .attr('font-weight', 'normal')
+            .attr('fill', 'black')
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        this.yAxiesSelection
+            .attr('font-weight', 'normal')
+            .attr('fill', 'black')
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
         this.cellsSelection
             .attr('fill', (d: EdgeExt) => {
-                if (d.weight > 0) {
-                    return CONFIG.COLOR_CONFIG.NODE;
-                }
-                return 'transparent';
+                return d.weight > 0 ? this.colorService.getFill(d.hop) : 'transparent';
             })
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
@@ -216,10 +287,10 @@ export class MComponent implements AfterViewInit {
             .attr('rx', 2)
             .attr('ry', 2)
             .on('mouseover', this.mouseover.bind(this))
-            .on('mouseout', this.mouseout.bind(this)); 
+            .on('mouseout', this.mouseout.bind(this));
 
         const axisX = matrix.append('g')
-            .attr('class', 'xaxis')
+            .attr('id', 'xaxis')
             .style('font-size', '6pt')
             .attr('transform', `translate(0, ${CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM})`)
             .call(xAxis)
@@ -235,7 +306,7 @@ export class MComponent implements AfterViewInit {
             .remove();
 
         const axisY = matrix.append('g')
-            .attr('class', 'yaxis')
+            .attr('id', 'yaxis')
             .style('font-size', '6pt')
             .attr('transform', `translate(0, 0)`)
             .call(yAxis)
@@ -246,7 +317,7 @@ export class MComponent implements AfterViewInit {
             .attr('dx', '-.8em')
             .attr('dy', '.15em');
 
-            axisY.select('.domain')
+        axisY.select('.domain')
             .remove();
 
         const overlay = matrix.append('g')
@@ -271,5 +342,4 @@ export class MComponent implements AfterViewInit {
             .attr('ry', 2)
             .style('pointer-events', 'none');
     }
-
 }
