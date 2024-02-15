@@ -1,6 +1,6 @@
 export const CONFIG = {
     WIDTH: 800,
-    HEIGHT: 600,
+    HEIGHT: 800,
     API_BASE: 'http://localhost:8080/',
     COLOR_CONFIG: {
         NODE: '#0000ff',
@@ -19,19 +19,25 @@ export const CONFIG = {
         LABEL: '#ffffff',
         EGO_HOPS_FILL: {
             '-1': '#000000',
-            '0': '#fc8d62',
-            '1': '#a6cee3',
-            '2': '#1f78b4',
-            '3': '#b2df8a',
-            '4': '#33a02c',
+            '0': '#000000',
+            '1': '#66c2a5',
+            '2': '#fc8d62',
+            '3': '#8da0cb'
+            // '1': '#a6cee3',
+            // '2': '#1f78b4',
+            // '3': '#b2df8a',
+            // '4': '#33a02c',
         },
         EGO_HOPS_STROKE: {
             '-1': '#000000',
             '0': '#000000',
-            '1': '#a6cee3',
-            '2': '#1f78b4',
-            '3': '#b2df8a',
-            '4': '#33a02c',
+            '1': '#66c2a5',
+            '2': '#fc8d62',
+            '3': '#8da0cb'
+            // '1': '#a6cee3',
+            // '2': '#1f78b4',
+            // '3': '#b2df8a',
+            // '4': '#33a02c',
         },
     },
     SIZE_CONFIG: {
