@@ -169,7 +169,7 @@ export class NlComponent implements OnInit {
             .attr('id', (d: NodeExt) => `node-${d.id.toString().replace('.', '')}`)
             .attr('r', CONFIG.SIZE_CONFIG.NODE)
             .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop)) 
-            .attr('stroke-opacity', 0) // TODO: Define weight from original code
+            .attr('stroke-opacity', 0)
             .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop)) 
             .attr('fill-opacity', 0)
             .style('cursor', 'pointer')
