@@ -122,12 +122,13 @@ export class RComponent implements OnInit {
     mouseout() {
         // reset opacity
         this.nodesSelection
-            .attr('fill', CONFIG.COLOR_CONFIG.NODE)
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke', CONFIG.COLOR_CONFIG.EDGE_STROKE)
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
+
 
         this.textsSelection
             .attr('font-weight', 'normal')
@@ -136,7 +137,7 @@ export class RComponent implements OnInit {
     }
 
     draw() {
-        // define zoom behavior 
+        // define zoom behavior
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
