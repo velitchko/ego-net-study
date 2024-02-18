@@ -146,7 +146,7 @@ export class LComponent implements OnInit {
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+            // .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
         
         const link = g.append('g')
             .attr('class', 'links');
@@ -176,7 +176,7 @@ export class LComponent implements OnInit {
             .attr('pointer-events', 'none')
             .attr('x1', 0)
             .attr('y1', (d: number) => d * 200)
-            .attr('x2', CONFIG.WIDTH)
+            .attr('x2', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
             .attr('y2', (d: number) => d * 200);
 
         const node = g.append('g')
@@ -239,20 +239,20 @@ export class LComponent implements OnInit {
 
     ticked() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => d.source.x)
+            .attr('x1', (d: EdgeExt) => d.source.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y1', (d: EdgeExt) => d.source.y)
-            .attr('x2', (d: EdgeExt) => d.target.x)
+            .attr('x2', (d: EdgeExt) => d.target.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y2', (d: EdgeExt) => d.target.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cx', (d: NodeExt) => d.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.x)
+            .attr('x', (d: NodeExt) => d.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }

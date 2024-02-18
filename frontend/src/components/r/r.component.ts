@@ -19,6 +19,7 @@ export class RComponent implements OnInit {
     private hops: Array<number>;
     private hopMax: number;
     private radius: number;
+    private weightMin: number;
     
     // d3 selections
     private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
@@ -34,7 +35,8 @@ export class RComponent implements OnInit {
         this.edges = this.dataService.getDatasetEdges('radial') as Array<EdgeExt>;
         this.hops = this.nodes.map((d: NodeExt) => d.hop);
         this.hopMax = Math.max(...this.hops);
-        this.radius = Math.min(CONFIG.WIDTH, CONFIG.HEIGHT) / (2 * this.hopMax);
+        this.radius = Math.min(CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT, CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / (2 * this.hopMax);
+        this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
 
         this.nodesSelection = d3.select('#r-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#r-container').selectAll('line.link');
@@ -107,6 +109,7 @@ export class RComponent implements OnInit {
                         (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
             })
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+            .attr('stroke-width', 2)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_HIGHILIGHT_OPACITY);
 
         // set opacity of texts to 1
@@ -126,6 +129,7 @@ export class RComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -146,13 +150,14 @@ export class RComponent implements OnInit {
             });
         // set svg width and height
         const svg = d3.select('#r-container')
-            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
-            .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
+            .attr('width', CONFIG.WIDTH)
+            .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+        
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
@@ -161,7 +166,7 @@ export class RComponent implements OnInit {
             .data(this.edges)
             .enter()
             .append('line')
-            .attr('stroke-width', 1)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
         // Guides
         const guides = g.append('g')
@@ -179,8 +184,8 @@ export class RComponent implements OnInit {
             .attr('stroke-width', 1)
             .attr('stroke-dasharray', '5, 5')
             .attr('stroke', 'gray')
-            .attr('cx', CONFIG.WIDTH / 2)
-            .attr('cy', CONFIG.HEIGHT / 2);
+            .attr('cx', (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
+            .attr('cy', (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2);
 
         const nodes = g.append('g')
             .attr('id', 'nodes');
@@ -232,16 +237,17 @@ export class RComponent implements OnInit {
                     .links(this.edges)
             )
             .force('r', 
-            d3.forceRadial((d: NodeExt) => d.hop * this.radius, CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2)
+            d3.forceRadial((d: NodeExt) => d.hop * this.radius, (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2, (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2)
                 .strength(5)
             )
             .force('charge',
                 d3.forceManyBody()
-                    .strength(-300))
+                    .strength(-400))
             .force('center',
                 d3.forceCenter(
-                    CONFIG.WIDTH / 2.0,
-                    CONFIG.HEIGHT / 2.0))
+                    (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
+                    (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2.0)
+            )
             .on('end', this.ticked.bind(this));
         }
     ticked() {

@@ -13,7 +13,7 @@ import { ColorService } from '../../services/color.util';
 export class NlComponent implements OnInit {
     private nodes: Array<NodeExt>;
     private edges: Array<EdgeExt>;
-
+    private weightMin: number;
     // d3 selections
     private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
@@ -25,6 +25,7 @@ export class NlComponent implements OnInit {
     constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         this.nodes = this.dataService.getDatasetNodes('nodelink') as Array<NodeExt>;
         this.edges = this.dataService.getDatasetEdges('nodelink') as Array<EdgeExt>;
+        this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
 
         this.nodesSelection = d3.select('#nl-container').selectAll('circle.node');
         this.edgesSelection = d3.select('#nl-container').selectAll('line.link');
@@ -116,7 +117,7 @@ export class NlComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-width', (d: EdgeExt) => d.weight)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -136,8 +137,8 @@ export class NlComponent implements OnInit {
             });
         // set svg width and height
         const svg = d3.select('#nl-container')
-            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
-            .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
+            .attr('width', CONFIG.WIDTH)
+            .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
         // append g element and add zoom and drag to it 
@@ -154,7 +155,7 @@ export class NlComponent implements OnInit {
             .append('line')
             .attr('class', 'link')
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop)) 
-            .attr('stroke-width', (d: EdgeExt) => d.weight)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
             .attr('stroke-opacity', 0);
 
         // Initialize the nodes
@@ -209,8 +210,8 @@ export class NlComponent implements OnInit {
             )
             .force('center',
                 d3.forceCenter(
-                    (CONFIG.WIDTH) / 2.0,
-                    (CONFIG.HEIGHT) / 2.0)
+                    (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
+                    (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.TOP) / 2.0)
                     .strength(0.1)
             )
             .on('end', this.ticked.bind(this));

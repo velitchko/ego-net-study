@@ -172,7 +172,7 @@ export class MComponent implements AfterViewInit {
 
         this.cellsSelection
             .attr('fill', (d: EdgeExt) => {
-                return d.weight > 0 ? this.colorService.getFill(d.hop) : 'transparent';
+                return d.weight > 0 ? this.colorGradient(d.hop)(d.weight) : 'transparent';
             })
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
@@ -187,6 +187,10 @@ export class MComponent implements AfterViewInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
     }
 
+    colorGradient(hop: number) {
+        let color = this.colorService.getFill(hop);
+        return d3.scaleLinear<string, string>().range(['#ffffff', color]).domain([0,1]);
+    }
 
     range(size: number, startAt: number = 0): Array<number> {
         return [...Array(size).keys()].map(i => i + startAt);
@@ -241,8 +245,8 @@ export class MComponent implements AfterViewInit {
 
         // set svg width and height
         const svg = d3.select('#m-container')
-            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
-            .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
+            .attr('width', CONFIG.WIDTH)
+            .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
@@ -281,8 +285,10 @@ export class MComponent implements AfterViewInit {
             .attr('y', (d: EdgeExt) => y(d.target.toString()) ?? 0)
             .attr('width', x.bandwidth())
             .attr('height', y.bandwidth())
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
+            .attr('stroke-opacity', 0.5)
             .attr('fill', (d: EdgeExt) => {
-                return d.weight > 0 ? this.colorService.getFill(d.hop) : 'transparent';
+                return d.weight > 0 ? this.colorGradient(d.hop)(d.weight) : 'transparent';
             })
             .attr('rx', 2)
             .attr('ry', 2)
