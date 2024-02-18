@@ -1,6 +1,6 @@
 export const CONFIG = {
-    WIDTH: 800,
-    HEIGHT: 800,
+    WIDTH: 1000,
+    HEIGHT: 1000,
     API_BASE: 'http://localhost:8080/',
     COLOR_CONFIG: {
         NODE: '#0000ff',
