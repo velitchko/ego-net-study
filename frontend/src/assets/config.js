@@ -2,6 +2,7 @@ export const CONFIG = {
     WIDTH: 1000,
     HEIGHT: 1000,
     API_BASE: 'http://localhost:8080/',
+    PRECOMPUTED: true,
     COLOR_CONFIG: {
         NODE: '#0000ff',
         EDGE: '#000000',
