@@ -72,14 +72,25 @@ export class NlComponent implements OnInit {
         // find targets or sourcdes of current node in this.edges
         const neighbors = new Array<string | number>();
         
-        this.edges.forEach((d: EdgeExt) => {
-            if(d.source.id.toString().replace('.', '') === id) {
-                neighbors.push(d.target.id.toString().replace('.', ''));
-            } 
-            if(d.target.id.toString().replace('.', '') === id) {
-                neighbors.push(d.source.id.toString().replace('.', ''));
-            }
-        });
+        if(!CONFIG.PRECOMPUTED) {
+            this.edges.forEach((d: EdgeExt) => {
+                if (d.source.id.toString().replace('.', '') === id) {
+                    neighbors.push(d.target.id.toString().replace('.', ''));
+                }
+                if (d.target.id.toString().replace('.', '') === id) {
+                    neighbors.push(d.source.id.toString().replace('.', ''));
+                }
+            });
+        } else {
+            this.edges.forEach((d: EdgeExt) => {
+                if (d.source.toString().replace('.', '') === id) {
+                    neighbors.push(d.target.toString().replace('.', ''));
+                }
+                if (d.target.toString().replace('.', '') === id) {
+                    neighbors.push(d.source.toString().replace('.', ''));
+                }
+            });
+        }
 
         // set opacity of nodes to 1
         this.nodesSelection
@@ -93,8 +104,13 @@ export class NlComponent implements OnInit {
         // set opacity of edges to 1
         this.edgesSelection
             .filter((d: EdgeExt) => {
-                return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
-                        (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
+                if(!CONFIG.PRECOMPUTED) {
+                    return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
+                (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
+                } else {
+                    return (neighbors.includes(d.source.toString().replace('.', '')) && d.target.toString().replace('.', '') == id) ||
+                (neighbors.includes(d.target.toString().replace('.', '')) && d.source.toString().replace('.', '') == id);
+                }
             })
             .attr('stroke-width', 2)
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
@@ -196,25 +212,49 @@ export class NlComponent implements OnInit {
             .style('user-select', 'none')
             .text((d: NodeExt) => d.id);
 
-        // Let's list the force we wanna apply on the network
-        d3.forceSimulation<Node>(this.nodes)
-            .force('link',
-                d3.forceLink<NodeExt, EdgeExt>()
-                    .strength(0.25)
-                    .id((d: NodeExt) => d.id)
-                    .links(this.edges)
-            )
-            .force('charge',
-                d3.forceManyBody<NodeExt>()
-                    .strength(-300)
-            )
-            .force('center',
-                d3.forceCenter(
-                    (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
-                    (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.TOP) / 2.0)
-                    .strength(0.1)
-            )
+        if(!CONFIG.PRECOMPUTED) {
+            // Let's list the force we wanna apply on the network
+            d3.forceSimulation<Node>(this.nodes)
+                .force('link',
+                    d3.forceLink<NodeExt, EdgeExt>()
+                        .strength(0.25)
+                        .id((d: NodeExt) => d.id)
+                        .links(this.edges)
+                )
+                .force('charge',
+                    d3.forceManyBody<NodeExt>()
+                        .strength(-300)
+                )
+                .force('center',
+                    d3.forceCenter(
+                        (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
+                        (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.TOP) / 2.0)
+                        .strength(0.1)
+                )
             .on('end', this.ticked.bind(this));
+        } else {
+            this.layout();
+        }
+    }
+
+    layout() {
+        this.edgesSelection
+        .attr('x1', (d: EdgeExt) => d.x1 || 0)
+        .attr('y1', (d: EdgeExt) => d.y1 || 0)
+        .attr('x2', (d: EdgeExt) => d.x2 || 0)
+        .attr('y2', (d: EdgeExt) => d.y2 || 0)
+        .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
+
+    this.nodesSelection
+        .attr('cx', (d: NodeExt) => d.x)
+        .attr('cy', (d: NodeExt) => d.y)
+        .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
+        .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+    this.textsSelection
+        .attr('x', (d: NodeExt) => d.x)
+        .attr('y', (d: NodeExt) => d.y)
+        .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
     ticked() {
@@ -230,9 +270,6 @@ export class NlComponent implements OnInit {
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
-
-        console.log(this.nodes);
-        console.log(this.edges);
 
         this.textsSelection
             .attr('x', (d: NodeExt) => d.x)

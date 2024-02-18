@@ -5,8 +5,8 @@ import { GlobalErrorHandler } from '../../services/error.service';
 import { CONFIG } from '../../assets/config';
 import { ColorService } from '../../services/color.util';
 
-type NodeExt =  Node & { x: number, y: number };
-type EdgeExt =  Edge & { source: NodeExt, target: NodeExt };
+type NodeExt = Node & { x: number, y: number };
+type EdgeExt = Edge & { source: NodeExt, target: NodeExt };
 
 @Component({
     selector: 'app-r',
@@ -20,7 +20,7 @@ export class RComponent implements OnInit {
     private hopMax: number;
     private radius: number;
     private weightMin: number;
-    
+
     // d3 selections
     private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
@@ -62,7 +62,7 @@ export class RComponent implements OnInit {
         // set opacity of all no    des to 0.1
         this.nodesSelection
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
-        
+
         // set opacity of all edges to 0.1
         this.edgesSelection
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY);
@@ -83,15 +83,26 @@ export class RComponent implements OnInit {
 
         // find targets or sourcdes of current node in this.edges
         const neighbors = new Array<string | number>();
-        
-        this.edges.forEach((d: EdgeExt) => {
-            if(d.source.id.toString().replace('.', '') === id) {
-                neighbors.push(d.target.id.toString().replace('.', ''));
-            } 
-            if(d.target.id.toString().replace('.', '') === id) {
-                neighbors.push(d.source.id.toString().replace('.', ''));
-            }
-        });
+
+        if(!CONFIG.PRECOMPUTED) {
+            this.edges.forEach((d: EdgeExt) => {
+                if (d.source.id.toString().replace('.', '') === id) {
+                    neighbors.push(d.target.id.toString().replace('.', ''));
+                }
+                if (d.target.id.toString().replace('.', '') === id) {
+                    neighbors.push(d.source.id.toString().replace('.', ''));
+                }
+            });
+        } else {
+            this.edges.forEach((d: EdgeExt) => {
+                if (d.source.toString().replace('.', '') === id) {
+                    neighbors.push(d.target.toString().replace('.', ''));
+                }
+                if (d.target.toString().replace('.', '') === id) {
+                    neighbors.push(d.source.toString().replace('.', ''));
+                }
+            });
+        }
 
         // set opacity of nodes to 1
         this.nodesSelection
@@ -101,12 +112,17 @@ export class RComponent implements OnInit {
             })
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
-        
+
         // set opacity of edges to 1
         this.edgesSelection
             .filter((d: EdgeExt) => {
-                return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
-                        (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
+                if(!CONFIG.PRECOMPUTED) {
+                    return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
+                (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
+                } else {
+                    return (neighbors.includes(d.source.toString().replace('.', '')) && d.target.toString().replace('.', '') == id) ||
+                (neighbors.includes(d.target.toString().replace('.', '')) && d.source.toString().replace('.', '') == id);
+                }
             })
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('stroke-width', 2)
@@ -129,7 +145,7 @@ export class RComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -157,7 +173,7 @@ export class RComponent implements OnInit {
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
-        
+
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
@@ -166,7 +182,7 @@ export class RComponent implements OnInit {
             .data(this.edges)
             .enter()
             .append('line')
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
         // Guides
         const guides = g.append('g')
@@ -229,27 +245,52 @@ export class RComponent implements OnInit {
         //.text(d => d.id)
 
         // Let's list the force we wanna apply on the network
-        d3.forceSimulation<NodeExt>(this.nodes)
-            .force('link',
-                d3.forceLink<NodeExt, EdgeExt>()
-                    // .strength(0.25)
-                    .id((d: NodeExt) => d.id)
-                    .links(this.edges)
-            )
-            .force('r', 
-            d3.forceRadial((d: NodeExt) => d.hop * this.radius, (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2, (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2)
-                .strength(5)
-            )
-            .force('charge',
-                d3.forceManyBody()
-                    .strength(-400))
-            .force('center',
-                d3.forceCenter(
-                    (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
-                    (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2.0)
-            )
-            .on('end', this.ticked.bind(this));
+        if (!CONFIG.PRECOMPUTED) {
+            d3.forceSimulation<NodeExt>(this.nodes)
+                .force('link',
+                    d3.forceLink<NodeExt, EdgeExt>()
+                        // .strength(0.25)
+                        .id((d: NodeExt) => d.id)
+                        .links(this.edges)
+                )
+                .force('r',
+                    d3.forceRadial((d: NodeExt) => d.hop * this.radius, (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2, (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2)
+                        .strength(5)
+                )
+                .force('charge',
+                    d3.forceManyBody()
+                        .strength(-400))
+                .force('center',
+                    d3.forceCenter(
+                        (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
+                        (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2.0)
+                )
+                .on('end', this.ticked.bind(this));
+        } else {
+            this.layout();
         }
+    }
+
+    layout() {
+        this.edgesSelection
+            .attr('x1', (d: EdgeExt) => d.x1 || 0)
+            .attr('y1', (d: EdgeExt) => d.y1 || 0)
+            .attr('x2', (d: EdgeExt) => d.x2 || 0)
+            .attr('y2', (d: EdgeExt) => d.y2 || 0)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
+
+        this.nodesSelection
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        this.textsSelection
+            .attr('x', (d: NodeExt) => d.x)
+            .attr('y', (d: NodeExt) => d.y)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+    }
+    
     ticked() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => d.source.x)
