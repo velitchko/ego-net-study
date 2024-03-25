@@ -6,18 +6,41 @@ import { SURVEY_JSON } from '../assets/survey.js';
 import { CONFIG } from '../assets/config';
 
 type QualitativeAnswer = {
-    m: number,
-    nl: number,
-    l: number,
-    r: number,
-    comments: string
+    learn: number,
+    use: number,
+    aesth: number,
+    acc: number,
+    quick: number,
+    like: string,
+    dislike: string
 };
+
+type DemographicAnswer = {
+    prolificId: string,
+    gender: string,
+    ageGroup: string,
+    education: string,
+    familiarity: string
+};
+
+type AgreementAnswer = {
+    confirm: string,
+    agreement: string
+};
+
+// export type Params = {
+//     user: string,
+//     egoNetApproaches: Array<string>,
+//     taskCode: string,
+//     taskDescription: string
+// };
+
 
 export type Params = {
     user: string,
-    egoNetApproaches: Array<string>,
-    taskCode: string,
-    taskDescription: string
+    egoNetApproach: string,
+    taskCodes: Array<string>,
+    taskDescriptions: Array<string>
 };
 
 export type Result = { 
@@ -25,12 +48,13 @@ export type Result = {
     time: number, 
     task: string, 
     representation: string, 
-    answer: string | number | QualitativeAnswer 
+    answer: string | number | QualitativeAnswer | DemographicAnswer | AgreementAnswer
 } | {
     index: number,
     time: number,
     order: Array<string>,
-    task: string,
+    task?: string,
+    reprentation: string,
 };
 @Injectable({
     providedIn: 'root'
@@ -38,6 +62,7 @@ export type Result = {
 
 export class ResultsService {
     private params: Params | null;
+    private taskCounter: number = 0;
 
     protected questionMap: Map<string, string> = new Map([
         ['matrix', 'm-question'],
@@ -68,8 +93,8 @@ export class ResultsService {
         this.results.push({
             index: -99,
             time: 0,
-            order: this.params.egoNetApproaches,
-            task: this.params.taskCode
+            order: this.params.taskCodes,
+            reprentation: this.params.egoNetApproach
         });
     }
 
@@ -77,45 +102,103 @@ export class ResultsService {
         return this.params;
     }
 
-    pushResult(result: Result): void {
+    getCurrentTask(): string {
+        console.log(this.taskCounter);
+        console.log(this.params?.taskCodes);
+        console.log(this.params?.taskCodes[this.taskCounter]);
+        return this.params?.taskCodes[this.taskCounter] || '';
+    }
+
+    pushResult(result: Result, increment?: boolean): void {
         // pushes result to local array
         this.results.push(result);
+        console.log(this.results);
+        if(increment) this.taskCounter++;
     }
+
+    // OLD VERSION BETWEEN SUBJECT
+    // setupSurvey(): void {
+    //     if (this.params === null) return;
+
+    //     console.log(this.params);
+
+    //     const task = this.params.taskCode;
+    //     const description = this.params.taskDescription;
+
+    //     // iterate over this.params.eogNetApproaches
+    //     this.params.egoNetApproaches.forEach((approach, i) => {
+    //         // construct question
+    //         const question = {
+    //             name: `${approach}-${task}`,
+    //             elements: [
+    //                 {
+    //                     type: 'text',
+    //                     placeholder: 'Enter your answer here',
+    //                     inputType: 'text',
+    //                     isRequired: true,
+    //                     title: 'Answer',
+    //                     name: `${approach}-${task}-answer`
+    //                 },
+    //                 {
+    //                     type: this.questionMap.get(approach) as string,
+    //                     title: this.titleMap.get(approach) as string,
+    //                     description: description
+    //                 }
+    //             ]
+    //         };
+
+    //         // put question after intro page
+    //         SURVEY_JSON.pages.splice(i + 1, 0, question);
+    //     });
+        
+    //     this.surveySetup = true;
+    // }
+
+
 
     setupSurvey(): void {
         if (this.params === null) return;
 
-        const task = this.params.taskCode;
-        const description = this.params.taskDescription;
-
+        const approach = this.params.egoNetApproach;
         // iterate over this.params.eogNetApproaches
-        this.params.egoNetApproaches.forEach((approach, i) => {
+        this.params.taskCodes.forEach((task, i) => {
+            // TODO: Plug in node ids per task where $
             // construct question
             const question = {
                 name: `${approach}-${task}`,
-                elements: [{
-                    type: this.questionMap.get(approach) as string,
-                    title: this.titleMap.get(approach) as string,
-                    description: description
-                }, {
-                    type: 'text',
-                    placeholder: 'Enter your answer here',
-                    inputType: 'text',
-                    isRequired: true,
-                    title: 'Answer',
-                    name: `${approach}-${task}-answer`
-                }]
+                elements: [
+                    {
+                        type: 'text',
+                        placeholder: 'Enter your answer here',
+                        inputType: 'text',
+                        isRequired: true,
+                        title: 'Answer',
+                        name: `${approach}-${task}-answer`
+                    },
+                    {
+                        type: this.questionMap.get(approach) as string,
+                        title: this.titleMap.get(approach) as string,
+                        description: this.params?.taskDescriptions[i]
+                    }
+                ]
             };
+            console.log(question);
 
             // put question after intro page
-            SURVEY_JSON.pages.splice(i + 1, 0, question);
+            SURVEY_JSON.pages.splice(i + 2, 0, question);
         });
+
+        console.log(SURVEY_JSON);
         
         this.surveySetup = true;
     }
 
     isSetup(): boolean {
         return this.surveySetup;
+    }
+
+    getEgoNetApproach(): string {
+        return this.params?.egoNetApproach || 'matrix';
     }
 
     getSurvey(): any {
