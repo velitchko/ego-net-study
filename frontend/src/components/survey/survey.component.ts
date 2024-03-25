@@ -45,17 +45,46 @@ export class SurveyComponent {
         }
 
         const survey = new Model(this.resultsService.getSurvey());
-        survey.applyTheme(LayeredDarkPanelless);        
+        // survey.applyTheme(LayeredDarkPanelless);        
 
         this.survey = survey;
-
-        this.survey.onStarted.add((sender) => {
-            this.timer.start = Date.now();
+        
+        this.survey.onStarted.add((sender, options) => {
+            this.resultsService.pushResult({
+                index: -99,
+                time: 0,
+                task: 'intro',
+                representation: '',
+                answer: {
+                    confirm: sender.data['question_intro_confirm'],
+                    agreement: sender.data['question_intro_agree']
+                }
+            });
             console.log('⏰ Survey started');
         });
         // TODO: Save order of approaches in results before appending pages
         // this.survey.pages.push(...this.resultsService.getApproaches());
         this.survey.onCurrentPageChanged.add((sender, options) => {
+            if(options.oldCurrentPage.name === 'demographics') {
+                console.log('📊 Demographics page');
+
+                this.resultsService.pushResult({
+                    index: -99,
+                    time: 0,
+                    task: 'demographics',
+                    representation: '',
+                    answer: {
+                        prolificId: sender.data['prolific_id'],
+                        gender: sender.data['gender'],
+                        ageGroup: sender.data['age'],
+                        education: sender.data['education'],
+                        familiarity: sender.data['network_knowledge'],
+                    }
+                });
+                this.timer.start = Date.now();
+                return;
+            }
+            
             // update end time and record result
             this.timer.end = Date.now();
             const time = this.timer.end - this.timer.start;
@@ -68,20 +97,21 @@ export class SurveyComponent {
                 // GET SUBSTRING FROM START TO options.newCurrentPage.name.split('-')[options.newCurrentPage.name.split('-').length - 1]
                 representation: options.oldCurrentPage.name.split('-')[0],
                 answer: sender.data[`${options.oldCurrentPage.name}-answer`]
-            });
+            }, true);
 
             // reset start time
             this.timer.start = Date.now();
         });
 
         this.survey.onComplete.add((sender) => {
-
             const qualitativeFeedback = {
-                m: sender.data['m'],
-                nl: sender.data['nl'],
-                l: sender.data['l'],
-                r: sender.data['r'],
-                comments: sender.data['comments']
+                learn: sender.data['ego-rep-learn'],
+                use: sender.data['ego-rep-use'],
+                aesth: sender.data['ego-rep-aesth'],
+                acc: sender.data['ego-rep-acc'],
+                quick: sender.data['ego-rep-quick'],
+                like: sender.data['ego-rep-like'],
+                dislike: sender.data['ego-rep-dislike']
             };
 
             // push to results
