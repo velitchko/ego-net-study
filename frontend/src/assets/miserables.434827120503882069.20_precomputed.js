@@ -1,4 +1,4 @@
-export const DATA_NL_PRE = {
+export const DATA_T_TWO_PRE = {
     "nodes": [
             {
                 "id": "42",
