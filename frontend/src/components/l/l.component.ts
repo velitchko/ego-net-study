@@ -4,6 +4,7 @@ import { Node, NodeExt, Edge, EdgeExt, DataService } from '../../services/data.s
 import { CONFIG } from '../../assets/config';
 import { GlobalErrorHandler } from '../../services/error.service';
 import { ColorService } from '../../services/color.util';
+import { ResultsService } from '../../services/results.service';
 @Component({
     selector: 'app-l',
     templateUrl: './l.component.html',
@@ -24,9 +25,12 @@ export class LComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        this.nodes = this.dataService.getDatasetNodes('layered') as Array<NodeExt>;
-        this.edges = this.dataService.getDatasetEdges('layered') as Array<EdgeExt>;
+    constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
+        const task = this.resultsService.getCurrentTask();
+        console.log(task);
+        this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+
         this.hops = Array.from(new Set(this.nodes.map((d: NodeExt) => d.hop)));
         this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
 

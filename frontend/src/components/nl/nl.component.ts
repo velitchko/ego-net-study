@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import * as d3 from 'd3';
 import { Node, NodeExt, Edge, EdgeExt, DataService } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
+import { ResultsService } from '../../services/results.service';
 import { CONFIG } from '../../assets/config';
 import { ColorService } from '../../services/color.util';
 
@@ -22,9 +23,11 @@ export class NlComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        this.nodes = this.dataService.getDatasetNodes('nodelink') as Array<NodeExt>;
-        this.edges = this.dataService.getDatasetEdges('nodelink') as Array<EdgeExt>;
+    constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
+        const task = this.resultsService.getCurrentTask();
+        this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+
         this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
 
         this.nodesSelection = d3.select('#nl-container').selectAll('circle.node');

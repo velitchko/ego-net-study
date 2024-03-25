@@ -4,6 +4,7 @@ import { Node, Edge, DataService } from '../../services/data.service';
 import { GlobalErrorHandler } from '../../services/error.service';
 import { CONFIG } from '../../assets/config';
 import { ColorService } from '../../services/color.util';
+import { ResultsService } from '../../services/results.service';
 
 type NodeExt = Node & { x: number, y: number };
 type EdgeExt = Edge & { source: NodeExt, target: NodeExt };
@@ -30,9 +31,11 @@ export class RComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        this.nodes = this.dataService.getDatasetNodes('radial') as Array<NodeExt>;
-        this.edges = this.dataService.getDatasetEdges('radial') as Array<EdgeExt>;
+    constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
+        const task = this.resultsService.getCurrentTask();
+        this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+
         this.hops = this.nodes.map((d: NodeExt) => d.hop);
         this.hopMax = Math.max(...this.hops);
         this.radius = Math.min(CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT, CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / (2 * this.hopMax);

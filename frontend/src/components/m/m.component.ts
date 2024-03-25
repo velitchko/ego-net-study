@@ -4,7 +4,8 @@ import { Node, NodeExt, DataService, Edge, Cell, EdgeExt } from '../../services/
 import { GlobalErrorHandler } from '../../services/error.service';
 import { ColorService } from '../../services/color.util';
 import { CONFIG } from '../../assets/config';
-
+import { DATA_T_ONE } from '../../assets/miserables.7466811289384769737.2';
+import { ResultsService } from 'src/services/results.service';
 @Component({
     selector: 'app-m',
     templateUrl: './m.component.html',
@@ -25,9 +26,11 @@ export class MComponent implements AfterViewInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
-    constructor(private dataService: DataService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        this.nodes = this.dataService.getDatasetNodes('matrix') as Array<NodeExt>;
-        this.edges = this.dataService.getDatasetEdges('matrix') as Array<EdgeExt>;
+    constructor(private dataService: DataService, private resultsService: ResultsService ,private errorService: GlobalErrorHandler, private colorService: ColorService) {
+        const task = this.resultsService.getCurrentTask();
+        this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
+        this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+
         this.nodes.sort((a: NodeExt, b: NodeExt) => {
             return a.hop - b.hop;
         });
@@ -43,11 +46,12 @@ export class MComponent implements AfterViewInit {
     }
 
     ngAfterViewInit(): void {
-        try {
+        // try {
             this.draw();
-        } catch (error) {
-            this.errorService.handleError(error);
-        }
+        // } catch (error) {
+        //     console.error(error);
+        //     this.errorService.handleError(error);
+        // }
     }
 
     mouseover($event: MouseEvent): void {
