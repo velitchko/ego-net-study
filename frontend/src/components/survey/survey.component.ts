@@ -80,6 +80,13 @@ export class SurveyComponent {
                         familiarity: sender.data['network_knowledge'],
                     }
                 });
+                
+                return;
+            }
+
+            if(options.oldCurrentPage.name === 'tutorial') {
+                console.log('📊 Tutorial page');
+
                 this.timer.start = Date.now();
                 return;
             }
