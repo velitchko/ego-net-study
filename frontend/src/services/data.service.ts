@@ -1,11 +1,24 @@
 import { Injectable } from '@angular/core';
-import { DATA_NL_PRE } from '../assets/miserables.434827120503882069.20_precomputed.js';
-import { DATA_NL } from '../assets/miserables.434827120503882069.20.js';
-import { DATA_M } from '../assets/miserables.2499354945414561156.19.js';
-import { DATA_R_PRE } from '../assets/miserables.3848446828006397221.35_precomputed.js';
-import { DATA_R } from '../assets/miserables.3848446828006397221.35.js';
-import { DATA_L_PRE } from '../assets/miserables.8139397558749019675.37_precomputed.js';
-import { DATA_L } from '../assets/miserables.8139397558749019675.37.js';
+// FIRST TASK
+import { DATA_T_ONE_PRE } from '../assets/miserables.7466811289384769737.2_precomputed';
+import { DATA_T_ONE } from '../assets/miserables.7466811289384769737.2.js';
+// SECOND TASK
+import { DATA_T_TWO_PRE } from '../assets/miserables.434827120503882069.20_precomputed';
+import { DATA_T_TWO } from '../assets/miserables.434827120503882069.20';
+// THIRD TASK
+import { DATA_T_THREE_PRE } from '../assets/miserables.2499354945414561156.19_precomputed';
+import { DATA_T_THREE } from '../assets/miserables.2499354945414561156.19';
+// FOURTH TASK
+import { DATA_T_FOUR_PRE } from '../assets/miserables.8139397558749019675.37_precomputed';
+import { DATA_T_FOUR } from '../assets/miserables.8139397558749019675.37';
+// FIFTH TASK
+import { DATA_T_FIVE_PRE } from '../assets/miserables.8508913866583860255.60_precomputed';
+import { DATA_T_FIVE } from '../assets/miserables.8508913866583860255.60';
+// SIXTH TASK
+import { DATA_T_SIX_PRE } from '../assets/miserables.4363687599787157139.26_precomputed';
+import { DATA_T_SIX } from '../assets/miserables.4363687599787157139.26';
+
+
 import { CONFIG } from '../assets/config';
 
 
@@ -19,12 +32,20 @@ export type EdgeExt = Edge & { source: NodeExt, target: NodeExt };
 })
 
 export class DataService {
-
+    // TODO: new map with dataset per task instead of representation
+    // private datasets: Map<string, any> = new Map([
+    //     ['nodelink', CONFIG.PRECOMPUTED ? DATA_NL_PRE : DATA_NL],
+    //     ['matrix', CONFIG.PRECOMPUTED ? DATA_M : DATA_M],
+    //     ['layered', CONFIG.PRECOMPUTED ? DATA_L_PRE : DATA_L],
+    //     ['radial', CONFIG.PRECOMPUTED ? DATA_R_PRE : DATA_R]
+    // ]);
     private datasets: Map<string, any> = new Map([
-        ['nodelink', CONFIG.PRECOMPUTED ? DATA_NL_PRE : DATA_NL],
-        ['matrix', CONFIG.PRECOMPUTED ? DATA_M : DATA_M],
-        ['layered', CONFIG.PRECOMPUTED ? DATA_L_PRE : DATA_L],
-        ['radial', CONFIG.PRECOMPUTED ? DATA_R_PRE : DATA_R]
+        ['t1', CONFIG.PRECOMPUTED ? DATA_T_ONE_PRE : DATA_T_ONE], // BROKEN
+        ['t2', CONFIG.PRECOMPUTED ? DATA_T_TWO_PRE : DATA_T_TWO], // WORKS
+        ['t3', CONFIG.PRECOMPUTED ? DATA_T_THREE_PRE : DATA_T_THREE], // WORKS
+        ['t4', CONFIG.PRECOMPUTED ? DATA_T_FOUR_PRE : DATA_T_FOUR], // WORKS
+        ['t5', CONFIG.PRECOMPUTED ? DATA_T_FIVE_PRE : DATA_T_FIVE], // BROKEN
+        ['t6', CONFIG.PRECOMPUTED ? DATA_T_SIX_PRE : DATA_T_SIX],
     ]);
 
     private parsedData: Map<string, { nodes: Array<Node>, edges: Array<Edge>, matrix: Array<Cell> }>;
@@ -33,33 +54,38 @@ export class DataService {
         this.parsedData = new Map<string, { nodes: Array<Node>, edges: Array<Edge>, matrix: Array<Cell> }>();
         // iterate over datasets and parse data from json file in assets dir
         this.datasets.forEach((data: any, key: string) => {
-            const parsed = this.parseData(data);
             if(!CONFIG.PRECOMPUTED) {
+                const parsed = this.parseData(data);
                 this.parsedData.set(key, { nodes: parsed.nodes, edges: parsed.links, matrix: parsed.matrix || [] });
             } else {
+                
+                const parsed = this.parsePrecomputedData(data);
                 this.parsedData.set(key, { nodes: parsed.nodes, edges: parsed.links, matrix: parsed.matrix || [] });
             }
         });
 
+
+        console.log(this.parsedData);
     }
 
+    // get data per task type
     getDatasetNodes(key: string): Array<Node> {
-        return this.parsedData.get(key)?.nodes.slice() || [];
+        return this.parsedData.get(key)?.nodes.slice() || this.parseData('t1').nodes.slice();
     }
 
     getDatasetEdges(key: string): Array<Edge> {
-        return this.parsedData.get(key)?.edges.slice() || [];
+        return this.parsedData.get(key)?.edges.slice() ||  this.parseData('t1').links.slice();
     }
 
     getDatasetMatrix(key: string): Array<Cell> {
         return this.parsedData.get(key)?.matrix.slice() || [];
     }
 
-    parsePrecomputedData(data: any): { nodes: Array<Node>, edges: Array<Edge>, matrix?: Array<Cell> } {
+    parsePrecomputedData(data: any): { nodes: Array<Node>, links: Array<Edge>, matrix?: Array<Cell> } {
 
         const nodes = data.nodes;
         const edges = data.links;
-
+    
         const parsedNodes = new Array<Node>();
         const parsedEdges = new Array<Edge>();
 
@@ -106,14 +132,14 @@ export class DataService {
 
         return {
             nodes: parsedNodes,
-            edges: parsedEdges,
+            links: parsedEdges,
         };
     }
 
     parseData(data: any): { nodes: Array<Node>, links: Array<Edge>, matrix?: Array<Cell> } {
         const nodes = data.nodes;
         const edges = data.links;
-
+        
         const parsedNodes = new Array<Node>();
         const parsedEdges = new Array<Edge>();
         const parsedMatrix = new Array<Cell>();
