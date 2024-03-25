@@ -28,8 +28,14 @@ export class MComponent implements AfterViewInit {
 
     constructor(private dataService: DataService, private resultsService: ResultsService ,private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
-        this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
-        this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+
+        if(task) {
+            this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+        } else {
+            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
+        }
 
         this.nodes.sort((a: NodeExt, b: NodeExt) => {
             return a.hop - b.hop;
@@ -81,7 +87,7 @@ export class MComponent implements AfterViewInit {
                     d3.select(nodes[i])
                         .select('text')
                         .attr('font-weight', '800')
-                        .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+                        // .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
                         .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
                 }
             });
@@ -93,13 +99,27 @@ export class MComponent implements AfterViewInit {
                     d3.select(nodes[i])
                         .select('text')
                         .attr('font-weight', '800')
-                        .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
+                        // .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
                         .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
                 }
             });
+
+        d3.select(`#node-circle-x${source}`)
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT);
+
+        d3.select(`#node-circle-y${target}`)
+            .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT);
         // .attr('font-weight', 'bold')
         // .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
         // .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+
+        //TODO: Fix positioning
+        // draw tooltip at mouse position
+        d3.select('#tooltip')
+            .style('left', `${$event.pageX - 6}px`)
+            .style('top', `${$event.pageY - 6}px`)
+            .style('display', 'block')
+            .html(`Source: ${source}, Target: ${target}`);
 
         // get x and y position of the current cell
         const x = d3.select(`#${id}`).attr('x');
@@ -163,16 +183,25 @@ export class MComponent implements AfterViewInit {
         // remove crosshair
         d3.select('#crosshair').remove();
 
+        // hide tooltip
+        d3.select('#tooltip').style('display', 'none');
+
         // reset axis labels
         this.xAxiesSelection
             .attr('font-weight', 'normal')
-            .attr('fill', 'black')
+            .attr('fill', 'white')
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.yAxiesSelection
             .attr('font-weight', 'normal')
-            .attr('fill', 'black')
+            .attr('fill', 'white')
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        d3.selectAll('.node-circle-x')
+            .attr('fill', (d: any) => this.colorService.getFill(d.hop));
+
+        d3.selectAll('.node-circle-y')
+            .attr('fill', (d: any) => this.colorService.getFill(d.hop));
 
         this.cellsSelection
             .attr('fill', (d: EdgeExt) => {
@@ -253,6 +282,20 @@ export class MComponent implements AfterViewInit {
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
+        // append tooltip and disable
+        d3.select('#tooltip')
+            .style('position', 'absolute')
+            .style('background', 'white')
+            .style('padding', '5px')
+            .style('border', '1px solid black')
+            .style('border-radius', '5px')
+            .style('pointer-events', 'none')
+            .style('font-size', '12px')
+            .style('font-family', 'sans-serif')
+            .style('font-weight', 'bold')
+            .style('z-index', 999)
+            .style('display', 'none');
+
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
@@ -271,7 +314,7 @@ export class MComponent implements AfterViewInit {
             .range([0, CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM])
             .padding(0.05);
 
-        const xAxis = d3.axisBottom(x)
+        const xAxis = d3.axisTop(x)
             .tickSizeOuter(0)
             .tickSizeInner(0);
 
@@ -299,18 +342,41 @@ export class MComponent implements AfterViewInit {
             .on('mouseover', this.mouseover.bind(this))
             .on('mouseout', this.mouseout.bind(this));
 
+        const circlesX = matrix.selectAll('.node-circle-x')
+            .data(this.nodes)
+            .enter()
+            .append('circle')
+            .attr('class', 'node-circle-x')
+            .attr('id', (d: Node) => `node-circle-x${d.id}`)
+            .attr('cx', (d: Node) => (x(d.id.toString()) || 0) + x.bandwidth() / 2)
+            .attr('cy', -10)
+            .attr('r', 6)
+            .attr('fill', (d: Node) => this.colorService.getFill(d.hop));
+
+        const circlesY = matrix.selectAll('.node-circle-y')
+            .data(this.nodes)
+            .enter()
+            .append('circle')
+            .attr('class', 'node-circle-y')
+            .attr('id', (d: Node) => `node-circle-y${d.id}`)
+            .attr('cx', -10)
+            .attr('cy', (d: Node) => (y(d.id.toString()) || 0) + y.bandwidth() / 2)
+            .attr('r', 6)
+            .attr('fill', (d: Node) => this.colorService.getFill(d.hop));
+
         const axisX = matrix.append('g')
             .attr('id', 'xaxis')
             .style('font-size', '6pt')
-            .attr('transform', `translate(0, ${CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM})`)
+            .attr('transform', `translate(6, -5)`)
             .call(xAxis)
 
         this.xAxiesSelection = axisX
             .selectAll('text')
-            .style('text-anchor', 'end')
+            .style('text-anchor', 'middle')
+            .attr('fill', 'white')
             .attr('dx', '-.8em')
             .attr('dy', '.15em')
-            .attr('transform', 'rotate(-65)')
+            // .attr('transform', 'rotate(-65)')
 
         axisX.select('.domain')
             .remove();
@@ -318,12 +384,13 @@ export class MComponent implements AfterViewInit {
         const axisY = matrix.append('g')
             .attr('id', 'yaxis')
             .style('font-size', '6pt')
-            .attr('transform', `translate(0, 0)`)
+            .attr('transform', `translate(-1, 2)`)
             .call(yAxis)
 
         this.yAxiesSelection = axisY
             .selectAll('text')
-            .style('text-anchor', 'end')
+            .style('text-anchor', 'middle')
+            .attr('fill', 'white')
             .attr('dx', '-.8em')
             .attr('dy', '.15em');
 

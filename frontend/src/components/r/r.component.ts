@@ -33,8 +33,14 @@ export class RComponent implements OnInit {
 
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
-        this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
-        this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+
+        if(task) {
+            this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+        } else {
+            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
+        }
 
         this.hops = this.nodes.map((d: NodeExt) => d.hop);
         this.hopMax = Math.max(...this.hops);
@@ -60,6 +66,7 @@ export class RComponent implements OnInit {
     mouseover($event: MouseEvent) {
         // highlight node and its edges
         // get id of currently selected node
+        console.log($event.target);
         const id = ($event.target as any).id.replace('node-', '');
 
         // set opacity of all no    des to 0.1
@@ -83,6 +90,14 @@ export class RComponent implements OnInit {
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
+
+        // draw tooltip at mouse position
+        //TODO: Fix positioning
+        d3.select('#tooltip')
+            .style('left', `${$event.pageX - 6}px`)
+            .style('top', `${$event.pageY - 6}px`)
+            .style('display', 'block')
+            .html(`Node: ${id}`);
 
         // find targets or sourcdes of current node in this.edges
         const neighbors = new Array<string | number>();
@@ -142,6 +157,10 @@ export class RComponent implements OnInit {
     }
 
     mouseout() {
+        // hide tooltip
+        d3.select('#tooltip')
+            .style('display', 'none');
+
         // reset opacity
         this.nodesSelection
             .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
@@ -172,6 +191,20 @@ export class RComponent implements OnInit {
             .attr('width', CONFIG.WIDTH)
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
+
+        // append tooltip and disable
+        d3.select('#tooltip')
+            .style('position', 'absolute')
+            .style('background', 'white')
+            .style('padding', '5px')
+            .style('border', '1px solid black')
+            .style('border-radius', '5px')
+            .style('pointer-events', 'none')
+            .style('font-size', '12px')
+            .style('font-family', 'sans-serif')
+            .style('font-weight', 'bold')
+            .style('z-index', 999)
+            .style('display', 'none');
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
@@ -242,7 +275,7 @@ export class RComponent implements OnInit {
             .attr('fill-opacity', 0)
             .style('pointer-events', 'none')
             .style('user-select', 'none')
-            .text(() => Math.floor(Math.random() * 99))
+            .text(d => d.id);
         // .on('mouseover', this.mouseover.bind(this))
         // .on('mouseout', this.mouseout.bind(this));
         //.text(d => d.id)
