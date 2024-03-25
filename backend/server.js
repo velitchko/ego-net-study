@@ -6,13 +6,15 @@ const cors = require('cors');
 
 const egoNetApproaches = [ 'matrix', 'nodelink', 'radial', 'layered' ];
 const taskCodes = [ 't1', 't2', 't3', 't4', 't5', 't6' ];
+
+// TODO: Triple check that task code aligns with data set export 
 const taskDescriptions = new Map([
-    ['t1', 'List the common neighbors of nodes $ and $.'],
-    ['t2', 'Find the 2-alter node with the largest number of neighbors.'],
-    ['t3', 'Count the number of intra-1-alter edges.'],
-    ['t4', 'Count the number of neighbors of node $'],
+    ['t1', 'Find the 2-alter node with the largest number of neighbors.'],
+    ['t2', 'List the common neighbors of nodes 9 and 31.'],
+    ['t3', 'Count the number of neighbors of node 52'],
+    ['t4', 'Count the number of intra-1-alter edges.'],
     ['t5', 'Count the number of 2-alter nodes.'],
-    ['t6', 'Find the node most strongly associated with the ego node $']
+    ['t6', 'Find the alter most strongly associated with the ego node 26']
 ]);
 
 // check the length of the files in the data dir and assign task accordingly 
@@ -24,13 +26,6 @@ const taskThresholdMap = new Map([
     ['t4', 48],
     ['t5', 48]
 ]);
-
-// T1
-// T2 - 9 & 31
-// T3 -
-// T4 - 
-// T5 - 
-// T6 - 
 
 const encodingThresholdMap = new Map([
     ['node-link', 48],
@@ -117,7 +112,9 @@ app.get('/params', (req, res) => {
     //     } 
     // });
 
-    // TODO: BETWEEN SUBJECT SETUP
+    // TODO: for pilot just loop over encodings 
+    
+    // TODO: for deployment use this
     encodingThresholdMap.forEach((threshold, encoding) => {
             console.log('🔢 Encoding:', encoding, threshold);
             const logEncodingCount = logFileNames.filter(fileName => fileName.includes(encoding)).length;
