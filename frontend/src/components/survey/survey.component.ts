@@ -62,8 +62,7 @@ export class SurveyComponent {
             });
             console.log('⏰ Survey started');
         });
-        // TODO: Save order of approaches in results before appending pages
-        // this.survey.pages.push(...this.resultsService.getApproaches());
+    
         this.survey.onCurrentPageChanged.add((sender, options) => {
             if(options.oldCurrentPage.name === 'demographics') {
                 console.log('📊 Demographics page');
