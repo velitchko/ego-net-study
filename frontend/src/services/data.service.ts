@@ -32,7 +32,6 @@ export type EdgeExt = Edge & { source: NodeExt, target: NodeExt };
 })
 
 export class DataService {
-    // TODO: new map with dataset per task instead of representation
     // private datasets: Map<string, any> = new Map([
     //     ['nodelink', CONFIG.PRECOMPUTED ? DATA_NL_PRE : DATA_NL],
     //     ['matrix', CONFIG.PRECOMPUTED ? DATA_M : DATA_M],
