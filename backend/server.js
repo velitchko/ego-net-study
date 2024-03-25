@@ -5,13 +5,14 @@ const uuid = require('uuid');
 const cors = require('cors');
 
 const egoNetApproaches = [ 'matrix', 'nodelink', 'radial', 'layered' ];
-const taskCodes = [ 't1', 't2', 't3', 't4', 't5' ];
+const taskCodes = [ 't1', 't2', 't3', 't4', 't5', 't6' ];
 const taskDescriptions = new Map([
-    ['t1', 'find a node'],
-    ['t2', 'find a node\'s neighbors'],
-    ['t3', 'find a node\'s neighbors\' neighbors'],
-    ['t4', 'find a node\'s neighbors\' neighbors\' neighbors'],
-    ['t5', 'find a node\'s neighbors\' neighbors\' neighbors\' neighbors']
+    ['t1', 'List the common neighbors of nodes $ and $.'],
+    ['t2', 'Find the 2-alter node with the largest number of neighbors.'],
+    ['t3', 'Count the number of intra-1-alter edges.'],
+    ['t4', 'Count the number of neighbors of node $'],
+    ['t5', 'Count the number of 2-alter nodes.'],
+    ['t6', 'Find the node most strongly associated with the ego node $']
 ]);
 
 // check the length of the files in the data dir and assign task accordingly 
@@ -22,6 +23,20 @@ const taskThresholdMap = new Map([
     ['t3', 48],
     ['t4', 48],
     ['t5', 48]
+]);
+
+// T1
+// T2 - 9 & 31
+// T3 -
+// T4 - 
+// T5 - 
+// T6 - 
+
+const encodingThresholdMap = new Map([
+    ['node-link', 48],
+    ['matrix', 48],
+    ['layered', 48],
+    ['radial', 48]
 ]);
 
 const squaresMap = new Map();
@@ -68,12 +83,12 @@ app.get('/params', (req, res) => {
     // keep track of each new user 
     let user = uuid.v4();
 
-    let randomEgoNetApproaches, randomTaskCode; 
+    // let randomEgoNetApproaches, randomTaskCode; 
     
     // get random order of ego-net approaches
-    randomEgoNetApproaches = squares.get(userTracker.size % 4);
+    // randomEgoNetApproaches = squares.get(userTracker.size % 4);
 
-    randomTaskCode = taskCodes[0]; // start with t1
+    let randomEncoding = egoNetApproaches[3]; // start with matrix
     
     // get list of file names in logs directory
     let logFiles = fs.readdirSync(`${__dirname}/logs`);
@@ -82,43 +97,63 @@ app.get('/params', (req, res) => {
     // get array of file names
     let logFileNames = logFiles.map(file => file.split('-')[1].split('.')[0]);
     let submissionFileNames = submissionFiles.map(file => file.split('-')[1]);
-    console.log('🪵 Log files:', logFileNames);
-    console.log('🗄️ Submission files:', submissionFileNames);
+    // console.log('🪵 Log files:', logFileNames);
+    // console.log('🗄️ Submission files:', submissionFileNames);
 
-    taskThresholdMap.forEach((threshold, task) => {
-        console.log('🔢 Task:', task, threshold);
-        const logTaskCount = logFileNames.filter(fileName => fileName.includes(task)).length;
-        const submissionTaskCount = submissionFileNames.filter(fileName => fileName.includes(task)).length;
+    // WITHIN SUBJECT SETUP
+    // taskThresholdMap.forEach((threshold, task) => {
+    //     console.log('🔢 Task:', task, threshold);
+    //     const logTaskCount = logFileNames.filter(fileName => fileName.includes(task)).length;
+    //     const submissionTaskCount = submissionFileNames.filter(fileName => fileName.includes(task)).length;
         
-        // Cross validate with submission count of the respective task
-        if (Math.min(logTaskCount, submissionTaskCount) >= threshold) {
-            // if log count is greater than or equal to threshold
-            // check if submission count is greater than or equal to threshold -> move to next
-            randomTaskCode = taskCodes[taskCodes.indexOf(task) + 1] || taskCodes[0];
-            console.log(`📁 File count Task ${task}: Logs(${logTaskCount}), Submissions(${submissionTaskCount})`);
-            console.log('📈 Threshold reached for task:', task);
-            console.log('➡️ Moving to next task...', randomTaskCode);
-        } 
-    });
+    //     // Cross validate with submission count of the respective task
+    //     if (Math.min(logTaskCount, submissionTaskCount) >= threshold) {
+    //         // if log count is greater than or equal to threshold
+    //         // check if submission count is greater than or equal to threshold -> move to next
+    //         randomTaskCode = taskCodes[taskCodes.indexOf(task) + 1] || taskCodes[0];
+    //         console.log(`📁 File count Task ${task}: Logs(${logTaskCount}), Submissions(${submissionTaskCount})`);
+    //         console.log('📈 Threshold reached for task:', task);
+    //         console.log('➡️ Moving to next task...', randomTaskCode);
+    //     } 
+    // });
 
-    console.log('🔢 Random ego-net approaches:', randomEgoNetApproaches);
-    console.log('🔢 Random task code:', randomTaskCode);
+    // TODO: BETWEEN SUBJECT SETUP
+    encodingThresholdMap.forEach((threshold, encoding) => {
+            console.log('🔢 Encoding:', encoding, threshold);
+            const logEncodingCount = logFileNames.filter(fileName => fileName.includes(encoding)).length;
+            const submissionEncodingCount = submissionFileNames.filter(fileName => fileName.includes(encoding)).length;
+            
+            // Cross validate with submission count of the respective task
+            if (Math.min(logEncodingCount, submissionEncodingCount) >= threshold) {
+                // if log count is greater than or equal to threshold
+                // check if submission count is greater than or equal to threshold -> move to next
+                randomEncoding = egoNetApproaches[egoNetApproaches.indexOf(encoding) + 1] || egoNetApproaches[0];
+                console.log(`📁 File count Encoding ${task}: Logs(${logEncodingCount}), Submissions(${submissionEncodingCount})`);
+                console.log('📈 Threshold reached for encoding:', encoding);
+                console.log('➡️ Moving to next task...', randomEncoding);
+            } 
+        });
+    // Send a single representation for each tasks randomize the tasks randomly
 
+    // console.log('🔢 Random ego-net approaches:', randomEgoNetApproaches);
+    // console.log('🔢 Random task code:', randomTaskCode);
+    const randomizedTaskOrder = taskCodes.sort(() => Math.random() - 0.5);
+    const randomizedTaskDescription = randomizedTaskOrder.map(task => taskDescriptions.get(task));
 
     userTracker.set(user, {
-        egoNetApproaches: randomEgoNetApproaches,
-        taskCode: randomTaskCode,
-        taskDescription: taskDescriptions
+        egoNetApproach: randomEncoding,
+        taskCodes: randomizedTaskOrder,
+        taskDescriptions: randomizedTaskDescription
     });
     
     let params = {
         user: user,
-        egoNetApproaches: randomEgoNetApproaches,
-        taskCode: randomTaskCode,
-        taskDescription: taskDescriptions.get(randomTaskCode)
+        egoNetApproach: randomEncoding,
+        taskCodes: randomizedTaskOrder,
+        taskDescriptions: randomizedTaskDescription
     };
     // write id and params to file
-    fs.writeFileSync(`${__dirname}/logs/logs-${randomTaskCode}-${user}.json`, JSON.stringify(params));
+    fs.writeFileSync(`${__dirname}/logs/logs-${randomEncoding}-${user}.json`, JSON.stringify(params));
 
     console.log('🔍 Query parameters:', params);
 
@@ -130,7 +165,7 @@ app.get('/params', (req, res) => {
 });
 
 app.post('/results', (req, res) => {
-    filePath = `${__dirname}/data/data-${req.body.params.taskCode}-${req.body.params.user}.json`;
+    filePath = `${__dirname}/data/data-${req.body.params.egoNetApproach}-${req.body.params.user}.json`;
     console.log('📝 Writing to file...', filePath);
 
     fs.writeFileSync(filePath, JSON.stringify(req.body.results));
@@ -141,10 +176,10 @@ app.post('/results', (req, res) => {
 });
 
 // start the server
-app.listen(8080)
+app.listen(8060)
     .on('error', (err) => {
         console.log(`🚒 ${err}`);
     }).on('listening', () => {
         generateLatinSquares();
-        console.log('🚀 Server is listening at http://localhost:8080');
+        console.log('🚀 Server is listening at http://localhost:8060');
     });
