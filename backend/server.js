@@ -39,6 +39,8 @@ const squaresMap = new Map();
 // create a tracker for every user that visits the site
 let userTracker = new Map();
 
+const pilot = true;
+
 // 0: NL L R M
 // 1: M NL L R
 // 2: R M NL L
@@ -83,7 +85,7 @@ app.get('/params', (req, res) => {
     // get random order of ego-net approaches
     // randomEgoNetApproaches = squares.get(userTracker.size % 4);
 
-    let randomEncoding = egoNetApproaches[3]; // start with matrix
+    let randomEncoding = egoNetApproaches[0]; // start with matrix
     
     // get list of file names in logs directory
     let logFiles = fs.readdirSync(`${__dirname}/logs`);
@@ -113,7 +115,13 @@ app.get('/params', (req, res) => {
     // });
 
     // TODO: for pilot just loop over encodings 
-    
+    if(pilot) {
+        // for each next user, loop over the ego-net approaches
+        // and assign the next encoding
+        randomEncoding = egoNetApproaches[userTracker.size % egoNetApproaches.length];
+        console.log('🔢 Random encoding:', randomEncoding); 
+    }
+    else {
     // TODO: for deployment use this
     encodingThresholdMap.forEach((threshold, encoding) => {
             console.log('🔢 Encoding:', encoding, threshold);
@@ -130,6 +138,7 @@ app.get('/params', (req, res) => {
                 console.log('➡️ Moving to next task...', randomEncoding);
             } 
         });
+    }
     // Send a single representation for each tasks randomize the tasks randomly
 
     // console.log('🔢 Random ego-net approaches:', randomEgoNetApproaches);
@@ -173,10 +182,10 @@ app.post('/results', (req, res) => {
 });
 
 // start the server
-app.listen(8060)
+app.listen(8080)
     .on('error', (err) => {
         console.log(`🚒 ${err}`);
     }).on('listening', () => {
         generateLatinSquares();
-        console.log('🚀 Server is listening at http://localhost:8060');
+        console.log('🚀 Server is listening at http://localhost:8080');
     });
