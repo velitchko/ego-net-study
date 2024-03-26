@@ -27,6 +27,7 @@ export class RComponent implements OnInit {
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
     private guidesSelection: d3.Selection<SVGCircleElement, number, any, any>;
     private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
+    private tooltipSelection: d3.Selection<SVGGElement, unknown, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
@@ -34,7 +35,7 @@ export class RComponent implements OnInit {
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
 
-        if(task) {
+        if (task) {
             this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
         } else {
@@ -66,7 +67,6 @@ export class RComponent implements OnInit {
     mouseover($event: MouseEvent) {
         // highlight node and its edges
         // get id of currently selected node
-        console.log($event.target);
         const id = ($event.target as any).id.replace('node-', '');
 
         // set opacity of all no    des to 0.1
@@ -86,23 +86,18 @@ export class RComponent implements OnInit {
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
 
+        const x = d3.select(`#node-${id}`).attr('cx');
+        const y = d3.select(`#node-${id}`).attr('cy');
+
         d3.select(`#label-${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
 
-        // draw tooltip at mouse position
-        //TODO: Fix positioning
-        d3.select('#tooltip')
-            .style('left', `${$event.pageX - 6}px`)
-            .style('top', `${$event.pageY - 6}px`)
-            .style('display', 'block')
-            .html(`Node: ${id}`);
-
         // find targets or sourcdes of current node in this.edges
         const neighbors = new Array<string | number>();
 
-        if(!CONFIG.PRECOMPUTED) {
+        if (!CONFIG.PRECOMPUTED) {
             this.edges.forEach((d: EdgeExt) => {
                 if (d.source.id.toString().replace('.', '') === id) {
                     neighbors.push(d.target.id.toString().replace('.', ''));
@@ -134,12 +129,12 @@ export class RComponent implements OnInit {
         // set opacity of edges to 1
         this.edgesSelection
             .filter((d: EdgeExt) => {
-                if(!CONFIG.PRECOMPUTED) {
+                if (!CONFIG.PRECOMPUTED) {
                     return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
-                (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
+                        (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
                 } else {
                     return (neighbors.includes(d.source.toString().replace('.', '')) && d.target.toString().replace('.', '') == id) ||
-                (neighbors.includes(d.target.toString().replace('.', '')) && d.source.toString().replace('.', '') == id);
+                        (neighbors.includes(d.target.toString().replace('.', '')) && d.source.toString().replace('.', '') == id);
                 }
             })
             .attr('stroke', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
@@ -154,13 +149,22 @@ export class RComponent implements OnInit {
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
+
+        this.tooltipSelection
+            .style('display', 'block')
+            .raise();
+
+        this.tooltipSelection.selectAll('rect')
+            .attr('x', +x + 10)
+            .attr('y', +y - 10);
+
+        this.tooltipSelection.selectAll('text')
+            .attr('x', +x + 15)
+            .attr('y', +y + 5)
+            .text(`Node: ${id}`);
     }
 
     mouseout() {
-        // hide tooltip
-        d3.select('#tooltip')
-            .style('display', 'none');
-
         // reset opacity
         this.nodesSelection
             .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
@@ -176,6 +180,8 @@ export class RComponent implements OnInit {
             .attr('font-weight', 'normal')
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        this.tooltipSelection.style('display', 'none');
     }
 
     draw() {
@@ -192,24 +198,35 @@ export class RComponent implements OnInit {
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
-        // append tooltip and disable
-        d3.select('#tooltip')
-            .style('position', 'absolute')
-            .style('background', 'white')
-            .style('padding', '5px')
-            .style('border', '1px solid black')
-            .style('border-radius', '5px')
-            .style('pointer-events', 'none')
-            .style('font-size', '12px')
-            .style('font-family', 'sans-serif')
-            .style('font-weight', 'bold')
-            .style('z-index', 999)
-            .style('display', 'none');
-
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+        
+        this.tooltipSelection = g.append('g').attr('id', 'tooltip');
 
+        this.tooltipSelection
+            .style('display', 'none')
+            .style('pointer-events', 'none');
+
+        this.tooltipSelection
+            .append('rect')
+            .attr('fill', 'white')
+            .attr('fill-opacity', 0.7)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('rx', 5)
+            .attr('ry', 5)
+            .attr('width', 60)
+            .attr('height', 20);
+
+        this.tooltipSelection
+            .append('text')
+            .attr('x', 5)
+            .attr('y', 5)
+            .attr('font-size', 12)
+            .attr('fill', 'black')
+            .attr('font-weight', 'bold')
+            .text('Node');
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
@@ -326,7 +343,7 @@ export class RComponent implements OnInit {
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
-    
+
     ticked() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => d.source.x)

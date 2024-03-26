@@ -21,6 +21,7 @@ export class LComponent implements OnInit {
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
     private guidesSelection: d3.Selection<SVGLineElement, number, any, any>;
     private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
+    private tooltipSelection: d3.Selection<SVGGElement, unknown, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
@@ -76,6 +77,9 @@ export class LComponent implements OnInit {
         d3.select(`#node-${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
+
+        const x = d3.select(`#node-${id}`).attr('cx');
+        const y = d3.select(`#node-${id}`).attr('cy');
 
         d3.select(`#label-${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
@@ -137,17 +141,21 @@ export class LComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
 
-        // draw tooltip at mouse position
-        //TODO: Fix positioning
-        d3.select('#tooltip')
-            .style('left', `${$event.pageX}px`)
-            .style('top', `${$event.pageY}px`)
+        this.tooltipSelection
             .style('display', 'block')
-            .html(`Node: ${id}`);
+            .raise();
+
+        this.tooltipSelection.selectAll('rect')
+            .attr('x', +x + 10)
+            .attr('y', +y - 10);
+
+        this.tooltipSelection.selectAll('text')
+            .attr('x', +x + 15)
+            .attr('y', +y + 5)
+            .text(`Node: ${id}`);
     }
 
     mouseout() {
-        d3.select('#tooltip').style('display', 'none');
 
         // reset opacity
         this.nodesSelection
@@ -164,6 +172,8 @@ export class LComponent implements OnInit {
             .attr('font-weight', 'normal')
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        this.tooltipSelection.style('display', 'none');
     }
 
     draw(): void {
@@ -180,22 +190,34 @@ export class LComponent implements OnInit {
             .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
             .call(this.zoom.bind(this));
 
-        // append tooltip and disable
-        d3.select('#tooltip')
-            .style('position', 'absolute')
-            .style('background', 'white')
-            .style('padding', '5px')
-            .style('border', '1px solid black')
-            .style('border-radius', '5px')
-            .style('pointer-events', 'none')
-            .style('font-size', '12px')
-            .style('font-family', 'sans-serif')
-            .style('font-weight', 'bold')
-            .style('z-index', 999)
-            .style('display', 'none');
-
         const g = svg.append('g')
         // .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+
+        this.tooltipSelection = g.append('g').attr('id', 'tooltip');
+
+        this.tooltipSelection
+            .style('display', 'none')
+            .style('pointer-events', 'none');
+
+        this.tooltipSelection
+            .append('rect')
+            .attr('fill', 'white')
+            .attr('fill-opacity', 0.7)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('rx', 5)
+            .attr('ry', 5)
+            .attr('width', 60)
+            .attr('height', 20);
+
+        this.tooltipSelection
+            .append('text')
+            .attr('x', 5)
+            .attr('y', 5)
+            .attr('font-size', 12)
+            .attr('fill', 'black')
+            .attr('font-weight', 'bold')
+            .text('Node');
 
         const link = g.append('g')
             .attr('class', 'links');

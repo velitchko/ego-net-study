@@ -19,6 +19,7 @@ export class NlComponent implements OnInit {
     private nodesSelection: d3.Selection<SVGCircleElement, NodeExt, any, any>;
     private edgesSelection: d3.Selection<SVGLineElement, EdgeExt, any, any>;
     private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
+    private tooltipSelection: d3.Selection<SVGGElement, unknown, any, any>;
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
@@ -26,7 +27,7 @@ export class NlComponent implements OnInit {
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
 
-        if(task) {
+        if (task) {
             this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
         } else {
@@ -59,7 +60,7 @@ export class NlComponent implements OnInit {
         // set opacity of all no    des to 0.1
         this.nodesSelection
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY);
-        
+
         // set opacity of all edges to 0.1
         this.edgesSelection
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY);
@@ -72,23 +73,19 @@ export class NlComponent implements OnInit {
         d3.select(`#node-${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
-
+        
+        const x = d3.select(`#node-${id}`).attr('cx');
+        const y = d3.select(`#node-${id}`).attr('cy');
+    
         d3.select(`#label-${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
 
-        // draw tooltip at mouse position
-        d3.select('#tooltip')
-            .style('left', `${$event.pageX - 6}px`)
-            .style('top', `${$event.pageY - 6}px`)
-            .style('display', 'block')
-            .html(`Node: ${id}`);
-
         // find targets or sourcdes of current node in this.edges
         const neighbors = new Array<string | number>();
-        
-        if(!CONFIG.PRECOMPUTED) {
+
+        if (!CONFIG.PRECOMPUTED) {
             this.edges.forEach((d: EdgeExt) => {
                 if (d.source.id.toString().replace('.', '') === id) {
                     neighbors.push(d.target.id.toString().replace('.', ''));
@@ -116,16 +113,16 @@ export class NlComponent implements OnInit {
             })
             .attr('fill', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY);
-        
+
         // set opacity of edges to 1
         this.edgesSelection
             .filter((d: EdgeExt) => {
-                if(!CONFIG.PRECOMPUTED) {
+                if (!CONFIG.PRECOMPUTED) {
                     return (neighbors.includes(d.source.id.toString().replace('.', '')) && d.target.id.toString().replace('.', '') == id) ||
-                (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
+                        (neighbors.includes(d.target.id.toString().replace('.', '')) && d.source.id.toString().replace('.', '') == id);
                 } else {
                     return (neighbors.includes(d.source.toString().replace('.', '')) && d.target.toString().replace('.', '') == id) ||
-                (neighbors.includes(d.target.toString().replace('.', '')) && d.source.toString().replace('.', '') == id);
+                        (neighbors.includes(d.target.toString().replace('.', '')) && d.source.toString().replace('.', '') == id);
                 }
             })
             .attr('stroke-width', 2)
@@ -140,20 +137,30 @@ export class NlComponent implements OnInit {
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
+
+        
+        this.tooltipSelection
+            .style('display', 'block')
+            .raise();
+
+        this.tooltipSelection.selectAll('rect')
+            .attr('x', +x + 10)
+            .attr('y', +y - 10);
+
+        this.tooltipSelection.selectAll('text')
+            .attr('x', +x + 15)
+            .attr('y', +y + 5)
+            .text(`Node: ${id}`);
     }
 
     mouseout() {
-        // hide tooltip
-        d3.select('#tooltip')
-            .style('display', 'none');
-
         // reset opacity
         this.nodesSelection
             .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -161,6 +168,9 @@ export class NlComponent implements OnInit {
             .attr('font-weight', 'normal')
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+
+        this.tooltipSelection.style('display', 'none');
+
     }
 
     draw() {
@@ -177,25 +187,36 @@ export class NlComponent implements OnInit {
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
-        //TODO: Fix positioning
-        // append tooltip and disable
-        d3.select('#tooltip')
-            .style('position', 'absolute')
-            .style('background', 'white')
-            .style('padding', '5px')
-            .style('border', '1px solid black')
-            .style('border-radius', '5px')
-            .style('pointer-events', 'none')
-            .style('font-size', '12px')
-            .style('font-family', 'sans-serif')
-            .style('font-weight', 'bold')
-            .style('z-index', 999)
-            .style('display', 'none');
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
             .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
+        this.tooltipSelection = g.append('g').attr('id', 'tooltip');
+
+        this.tooltipSelection
+            .style('display', 'none')
+            .style('pointer-events', 'none');
+
+        this.tooltipSelection
+            .append('rect')
+            .attr('fill', 'white')
+            .attr('fill-opacity', 0.7)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('rx', 5)
+            .attr('ry', 5)
+            .attr('width', 60)
+            .attr('height', 20);
+
+        this.tooltipSelection
+            .append('text')
+            .attr('x', 5)
+            .attr('y', 5)
+            .attr('font-size', 12)
+            .attr('fill', 'black')
+            .attr('font-weight', 'bold')
+            .text('Node');
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
@@ -205,8 +226,8 @@ export class NlComponent implements OnInit {
             .enter()
             .append('line')
             .attr('class', 'link')
-            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop)) 
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin/3 + d.weight)
+            .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
+            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
             .attr('stroke-opacity', 0);
 
         // Initialize the nodes
@@ -220,9 +241,9 @@ export class NlComponent implements OnInit {
             .attr('class', 'node')
             .attr('id', (d: NodeExt) => `node-${d.id.toString().replace('.', '')}`)
             .attr('r', CONFIG.SIZE_CONFIG.NODE)
-            .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop)) 
+            .attr('stroke', (d: NodeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', 0)
-            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop)) 
+            .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
             .attr('fill-opacity', 0)
             .style('cursor', 'pointer')
             .on('mouseover', this.mouseover.bind(this))
@@ -247,7 +268,7 @@ export class NlComponent implements OnInit {
             .style('user-select', 'none')
             .text((d: NodeExt) => d.id);
 
-        if(!CONFIG.PRECOMPUTED) {
+        if (!CONFIG.PRECOMPUTED) {
             // Let's list the force we wanna apply on the network
             d3.forceSimulation<Node>(this.nodes)
                 .force('link',
@@ -266,7 +287,7 @@ export class NlComponent implements OnInit {
                         (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.TOP) / 2.0)
                         .strength(0.1)
                 )
-            .on('end', this.ticked.bind(this));
+                .on('end', this.ticked.bind(this));
         } else {
             this.layout();
         }
@@ -274,22 +295,22 @@ export class NlComponent implements OnInit {
 
     layout() {
         this.edgesSelection
-        .attr('x1', (d: EdgeExt) => d.x1 || 0)
-        .attr('y1', (d: EdgeExt) => d.y1 || 0)
-        .attr('x2', (d: EdgeExt) => d.x2 || 0)
-        .attr('y2', (d: EdgeExt) => d.y2 || 0)
-        .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
+            .attr('x1', (d: EdgeExt) => d.x1 || 0)
+            .attr('y1', (d: EdgeExt) => d.y1 || 0)
+            .attr('x2', (d: EdgeExt) => d.x2 || 0)
+            .attr('y2', (d: EdgeExt) => d.y2 || 0)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
-    this.nodesSelection
-        .attr('cx', (d: NodeExt) => d.x)
-        .attr('cy', (d: NodeExt) => d.y)
-        .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
-        .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
+        this.nodesSelection
+            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cy', (d: NodeExt) => d.y)
+            .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
-    this.textsSelection
-        .attr('x', (d: NodeExt) => d.x)
-        .attr('y', (d: NodeExt) => d.y)
-        .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+        this.textsSelection
+            .attr('x', (d: NodeExt) => d.x)
+            .attr('y', (d: NodeExt) => d.y)
+            .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
     ticked() {
