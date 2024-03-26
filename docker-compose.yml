@@ -7,7 +7,9 @@ services:
       - "8080:8080"
     volumes:
       - ./backend:/app
-    restart: unless-stopped
+      - ./backend/data:/app/data
+      - ./backend/logs:/app/logs
+    restart: on-failure
     
   ego-net-frontend:
     build: ./frontend
@@ -17,4 +19,4 @@ services:
       - ./frontend:/app
     depends_on:
       - ego-net-backend
-    restart: unless-stopped
+    restart: on-failure
