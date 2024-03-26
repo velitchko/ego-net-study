@@ -34,8 +34,8 @@ export class MComponent implements AfterViewInit {
             this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t2') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t2') as Array<EdgeExt>;
         }
 
         this.nodes.sort((a: NodeExt, b: NodeExt) => {
@@ -235,6 +235,7 @@ export class MComponent implements AfterViewInit {
     }
 
     getEnds(orderedNodes: Array<Node>) {
+        console.log(orderedNodes);
         let currentHop = 0;
         let currentLength = 0;
         let ends = new Array<any>();

@@ -33,8 +33,8 @@ export class LComponent implements OnInit {
             this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t5') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t5') as Array<EdgeExt>;
         } 
 
         this.hops = Array.from(new Set(this.nodes.map((d: NodeExt) => d.hop)));
@@ -315,21 +315,29 @@ export class LComponent implements OnInit {
 
     layout() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => (d.x1  || 0) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
-            .attr('y1', (d: EdgeExt) => d.y1 || 0)
-            .attr('x2', (d: EdgeExt) => (d.x2 || 0) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
-            .attr('y2', (d: EdgeExt) => d.y2 || 0)
+            .attr('x1', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0 + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4
+            })
+            .attr('y1', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0;
+            })
+            .attr('x2', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0 + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4
+            })
+            .attr('y2', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0;
+            })
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.x  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
-            .attr('cy', (d: NodeExt) => d.y)
+            .attr('cx', (d: NodeExt) => d.lx || 0  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('cy', (d: NodeExt) => d.ly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.x  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
-            .attr('y', (d: NodeExt) => d.y)
+            .attr('x', (d: NodeExt) => d.lx || 0  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('y', (d: NodeExt) => d.ly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
@@ -351,5 +359,7 @@ export class LComponent implements OnInit {
             .attr('x', (d: NodeExt) => d.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+
+        console.log(this.nodes);
     }
 }

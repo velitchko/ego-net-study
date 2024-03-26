@@ -22,7 +22,23 @@ import { DATA_T_SIX } from '../assets/miserables.4363687599787157139.26';
 import { CONFIG } from '../assets/config';
 
 
-export type Node = { id: string | number, label: string, index: number, ego: string | number, hop: number, weight: number, parent: string | number, x?: number, y?: number };
+export type Node = { 
+    id: string | number, 
+    label: string, 
+    index: number, 
+    ego: string | number, 
+    hop: number, 
+    weight: number, 
+    parent: string | number, 
+    x?: number, 
+    y?: number,
+    nlx?: number,
+    nly?: number,
+    rx?: number, 
+    ry?: number,
+    lx?: number,
+    ly?: number,
+};
 export type Edge = { source: string | number, target: string | number, weight: number, ego: string | number, hop: number, x1?: number, y1?: number, x2?: number, y2?: number };
 export type Cell = { source: string | number, target: string | number, weight: number, x: number, y: number, ego: string | number, hop: number };
 export type NodeExt = Node & { x: number, y: number };
@@ -39,11 +55,11 @@ export class DataService {
     //     ['radial', CONFIG.PRECOMPUTED ? DATA_R_PRE : DATA_R]
     // ]);
     private datasets: Map<string, any> = new Map([
-        ['t1', CONFIG.PRECOMPUTED ? DATA_T_ONE_PRE : DATA_T_ONE], // BROKEN
-        ['t2', CONFIG.PRECOMPUTED ? DATA_T_TWO_PRE : DATA_T_TWO], // WORKS
-        ['t3', CONFIG.PRECOMPUTED ? DATA_T_THREE_PRE : DATA_T_THREE], // WORKS
-        ['t4', CONFIG.PRECOMPUTED ? DATA_T_FOUR_PRE : DATA_T_FOUR], // WORKS
-        ['t5', CONFIG.PRECOMPUTED ? DATA_T_FIVE_PRE : DATA_T_FIVE], // BROKEN
+        ['t1', CONFIG.PRECOMPUTED ? DATA_T_ONE_PRE : DATA_T_ONE], 
+        ['t2', CONFIG.PRECOMPUTED ? DATA_T_TWO_PRE : DATA_T_TWO], 
+        ['t3', CONFIG.PRECOMPUTED ? DATA_T_THREE_PRE : DATA_T_THREE], 
+        ['t4', CONFIG.PRECOMPUTED ? DATA_T_FOUR_PRE : DATA_T_FOUR], 
+        ['t5', CONFIG.PRECOMPUTED ? DATA_T_FIVE_PRE : DATA_T_FIVE], 
         ['t6', CONFIG.PRECOMPUTED ? DATA_T_SIX_PRE : DATA_T_SIX],
     ]);
 
@@ -88,7 +104,7 @@ export class DataService {
         const parsedNodes = new Array<Node>();
         const parsedEdges = new Array<Edge>();
 
-        nodes.forEach((node: { id: string | number, ego: string | number, hop: number, weighted: number, parent: string | number, x?: number, y?: number }, i: number) => {
+        nodes.forEach((node: { id: string | number, ego: string | number, hop: number, weighted: number, parent: string | number, x?: number, y?: number, nlx: number, nly: number, lx: number, ly: number, rx: number, ry: number }, i: number) => {
             parsedNodes.push({
                 id: node.id,
                 label: `${node.id}`,
@@ -97,8 +113,12 @@ export class DataService {
                 ego: node.ego,
                 weight: node.weighted,
                 parent: node.parent,
-                x: node.x || 0,
-                y: node.y || 0
+                nlx: node.nlx,
+                nly: node.nly,
+                lx: node.lx,
+                ly: node.ly,
+                rx: node.rx,
+                ry: node.ry,
             });
         });
 
@@ -145,7 +165,7 @@ export class DataService {
 
         // parse nodes
         // id: string | number, label: string, index: number, ego: string | number, hop: number, weight: number, parent: string | number };
-        nodes.forEach((node: { id: string | number, ego: string | number, hop: number, weighted: number, parent: string | number, x?: number, y?: number }, i: number) => {
+        nodes.forEach((node: { id: string | number, ego: string | number, hop: number, weighted: number, parent: string | number, x?: number, y?: number, nlx?: number, nly?: number, lx?: number, ly?: number, rx?: number, ry?: number }, i: number) => {
             parsedNodes.push({
                 id: node.id,
                 label: `${node.id}`,
@@ -155,7 +175,13 @@ export class DataService {
                 weight: node.weighted,
                 parent: node.parent,
                 x: node.x || 0,
-                y: node.y || 0
+                y: node.y || 0,
+                nlx: node.nlx,
+                nly: node.nly,
+                lx: node.lx,
+                ly: node.ly,
+                rx: node.rx,
+                ry: node.ry,
             });
         });
 

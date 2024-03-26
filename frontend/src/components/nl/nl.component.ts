@@ -31,8 +31,8 @@ export class NlComponent implements OnInit {
             this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t5') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t5') as Array<EdgeExt>;
         }
 
         this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
@@ -295,21 +295,29 @@ export class NlComponent implements OnInit {
 
     layout() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => d.x1 || 0)
-            .attr('y1', (d: EdgeExt) => d.y1 || 0)
-            .attr('x2', (d: EdgeExt) => d.x2 || 0)
-            .attr('y2', (d: EdgeExt) => d.y2 || 0)
+            .attr('x1', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.source)?.nlx || 0;
+            })
+            .attr('y1', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.source)?.nly || 0;
+            })
+            .attr('x2', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.target)?.nlx || 0; 
+            })
+            .attr('y2', (d: EdgeExt) => {
+                return this.nodes.find((n: NodeExt) => n.id === d.target)?.nly || 0; 
+            })
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.x)
-            .attr('cy', (d: NodeExt) => d.y)
+            .attr('cx', (d: NodeExt) => d.nlx || 0)
+            .attr('cy', (d: NodeExt) => d.nly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.x)
-            .attr('y', (d: NodeExt) => d.y)
+            .attr('x', (d: NodeExt) => d.nlx || 0)
+            .attr('y', (d: NodeExt) => d.nly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
@@ -331,5 +339,7 @@ export class NlComponent implements OnInit {
             .attr('x', (d: NodeExt) => d.x)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+
+        console.log(this.nodes);
     }
 }
