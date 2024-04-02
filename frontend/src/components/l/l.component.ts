@@ -191,7 +191,7 @@ export class LComponent implements OnInit {
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
-        // .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+        .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
 
@@ -316,47 +316,47 @@ export class LComponent implements OnInit {
     layout() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0 + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4
+                return ((this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             })
             .attr('y1', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0;
+                return (this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0);
             })
             .attr('x2', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0 + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4
+                return ((this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             })
             .attr('y2', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0;
+                return (this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0);
             })
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.lx || 0  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('cx', (d: NodeExt) => ((d.lx || 0)  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
             .attr('cy', (d: NodeExt) => d.ly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.lx || 0  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x', (d: NodeExt) => ((d.lx || 0)  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
             .attr('y', (d: NodeExt) => d.ly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
     ticked() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => d.source.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x1', (d: EdgeExt) => (d.source.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y1', (d: EdgeExt) => d.source.y)
-            .attr('x2', (d: EdgeExt) => d.target.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x2', (d: EdgeExt) => (d.target.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y2', (d: EdgeExt) => d.target.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('cx', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.x + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
 
