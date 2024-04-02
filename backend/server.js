@@ -7,7 +7,6 @@ const cors = require('cors');
 const egoNetApproaches = [ 'matrix', 'nodelink', 'radial', 'layered' ];
 const taskCodes = [ 't1', 't2', 't3', 't4', 't5', 't6' ];
 
-// TODO: Triple check that task code aligns with data set export 
 const taskDescriptions = new Map([
     ['t1', 'Find the 2-alter node with the largest number of neighbors.'],
     ['t2', 'List the common neighbors of nodes 9 and 31.'],
