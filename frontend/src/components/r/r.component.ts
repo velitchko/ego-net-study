@@ -32,6 +32,9 @@ export class RComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
+    // width
+    private w: number | undefined;
+
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
 
@@ -39,8 +42,8 @@ export class RComponent implements OnInit {
             this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t5') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t5') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
         }
 
         this.hops = this.nodes.map((d: NodeExt) => d.hop);
@@ -192,15 +195,19 @@ export class RComponent implements OnInit {
                 d3.select('#r-container').selectAll('g')
                     .attr('transform', $event.transform);
             });
-        // set svg width and height
+
+        // get width of #dthree container
+        this.w = document?.getElementById('dthree')?.offsetWidth;
+        
+        // set svg width and height 
         const svg = d3.select('#r-container')
-            .attr('width', CONFIG.WIDTH)
+            .attr('width', (this.w ? this.w : CONFIG.WIDTH))
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+            .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
         
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
 
@@ -307,7 +314,7 @@ export class RComponent implements OnInit {
                         .links(this.edges)
                 )
                 .force('r',
-                    d3.forceRadial((d: NodeExt) => d.hop * this.radius, (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2, (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2)
+                    d3.forceRadial((d: NodeExt) => d.hop * this.radius, ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2, (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2)
                         .strength(5)
                 )
                 .force('charge',
@@ -315,7 +322,7 @@ export class RComponent implements OnInit {
                         .strength(-400))
                 .force('center',
                     d3.forceCenter(
-                        (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
+                        ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
                         (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2.0)
                 )
                 .on('end', this.ticked.bind(this));

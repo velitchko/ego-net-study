@@ -23,6 +23,9 @@ export class NlComponent implements OnInit {
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
+    
+    // width of svg container
+    private w: number | undefined;
 
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
@@ -181,16 +184,19 @@ export class NlComponent implements OnInit {
                 d3.select('#nl-container').selectAll('g')
                     .attr('transform', $event.transform);
             });
+        // get width of #dthree container
+        this.w = document?.getElementById('dthree')?.offsetWidth;
+
         // set svg width and height
         const svg = d3.select('#nl-container')
-            .attr('width', CONFIG.WIDTH)
+            .attr('width', (this.w ? this.w : CONFIG.WIDTH))
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+            .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
 
@@ -283,7 +289,7 @@ export class NlComponent implements OnInit {
                 )
                 .force('center',
                     d3.forceCenter(
-                        (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
+                        ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
                         (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.TOP) / 2.0)
                         .strength(0.1)
                 )
@@ -339,7 +345,5 @@ export class NlComponent implements OnInit {
             .attr('x', (d: NodeExt) => d.x)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
-
-        console.log(this.nodes);
     }
 }

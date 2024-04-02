@@ -23,6 +23,8 @@ export class LComponent implements OnInit {
     private textsSelection: d3.Selection<SVGTextElement, NodeExt, any, any>;
     private tooltipSelection: d3.Selection<SVGGElement, unknown, any, any>;
 
+    private w: number | undefined; // Width of the container
+
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
@@ -156,7 +158,6 @@ export class LComponent implements OnInit {
     }
 
     mouseout() {
-
         // reset opacity
         this.nodesSelection
             .attr('fill', (d: NodeExt) => this.colorService.getFill(d.hop))
@@ -184,9 +185,12 @@ export class LComponent implements OnInit {
                 d3.select('#l-container').selectAll('g')
                     .attr('transform', $event.transform);
             });
-
+        
+        // get width of #dthree container
+        this.w = document?.getElementById('dthree')?.offsetWidth;
+        
         const svg = d3.select('#l-container')
-            .attr('width', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
+            .attr('width', (this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
             .attr('height', CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM)
             .call(this.zoom.bind(this));
 
@@ -247,7 +251,7 @@ export class LComponent implements OnInit {
             .attr('pointer-events', 'none')
             .attr('x1', 0)
             .attr('y1', (d: number) => d * 200)
-            .attr('x2', CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
+            .attr('x2', (this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT)
             .attr('y2', (d: number) => d * 200);
 
         const node = g.append('g')
@@ -316,13 +320,13 @@ export class LComponent implements OnInit {
     layout() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => {
-                return ((this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+                return ((this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             })
             .attr('y1', (d: EdgeExt) => {
                 return (this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0);
             })
             .attr('x2', (d: EdgeExt) => {
-                return ((this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+                return ((this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             })
             .attr('y2', (d: EdgeExt) => {
                 return (this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0);
@@ -330,13 +334,13 @@ export class LComponent implements OnInit {
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => ((d.lx || 0)  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
+            .attr('cx', (d: NodeExt) => ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH)- CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
             .attr('cy', (d: NodeExt) => d.ly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => ((d.lx || 0)  + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
+            .attr('x', (d: NodeExt) => ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
             .attr('y', (d: NodeExt) => d.ly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }

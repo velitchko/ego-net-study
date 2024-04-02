@@ -27,6 +27,9 @@ export class MComponent implements AfterViewInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
+    // width
+    private w: number | undefined;
+
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
         const task = this.resultsService.getCurrentTask();
 
@@ -282,14 +285,17 @@ export class MComponent implements AfterViewInit {
                     .attr('transform', $event.transform);
             });
 
+        // get width 
+        this.w = document.getElementById('dthree')?.offsetWidth;
+
         // set svg width and height
         const svg = d3.select('#m-container')
-            .attr('width', CONFIG.WIDTH)
+            .attr('width', (this.w ? this.w : CONFIG.WIDTH))
             .attr('height', CONFIG.HEIGHT)
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
+            .attr('transform', 'translate(' + (((this.w ? this.w : CONFIG.WIDTH)/4) + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
         const inbetweens = this.getInbetweens(this.getEnds(this.nodes));
 
