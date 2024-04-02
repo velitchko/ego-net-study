@@ -363,7 +363,5 @@ export class LComponent implements OnInit {
             .attr('x', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
-
-        console.log(this.nodes);
     }
 }

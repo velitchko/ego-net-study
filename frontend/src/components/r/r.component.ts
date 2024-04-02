@@ -377,7 +377,5 @@ export class RComponent implements OnInit {
             .attr('x', (d: NodeExt) => d.x)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
-
-        console.log(this.nodes);
     }
 }
