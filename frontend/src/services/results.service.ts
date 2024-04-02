@@ -110,6 +110,13 @@ export class ResultsService {
         During the actual evaluation, the graph will be interactive. You will be able to zoom in and out, pan, and highlight the neighbors of individual nodes.`]
     ]);
 
+    protected captionRepresenation: Map<string, string> = new Map([
+        ['matrix', 'Caption: The same network is represented once as a node-link diagram (left) and adjacency matrix (right). Note how the edges in the node-link diagram, i.e. the lines, become filled matrix cells in the adjacency matrix representation. Also, note how both nodes and subsequently edges are represented twice.'],
+        ['nodelink', 'Caption: A node-link diagram representation of an ego network. Note the ego\'s black color, and the various alter levels\' colors'],
+        ['layered', 'Caption: The same network represented once as a node-link diagram (left) and radial node-link diagram (right). Note the placement of the nodes along the layered lines.'],
+        ['radial', 'Caption: The same network represented once as a node-link diagram (left) and radial node-link diagram (right). Note the placement of the nodes along the concentric circles.']
+    ]);
+
     private surveySetup: boolean = false;
 
     private results: Array<Result> = new Array<Result>();
@@ -135,16 +142,12 @@ export class ResultsService {
     }
 
     getCurrentTask(): string {
-        console.log(this.taskCounter);
-        console.log(this.params?.taskCodes);
-        console.log(this.params?.taskCodes[this.taskCounter]);
         return this.params?.taskCodes[this.taskCounter] || '';
     }
 
     pushResult(result: Result, increment?: boolean): void {
         // pushes result to local array
         this.results.push(result);
-        console.log(this.results);
         if(increment) this.taskCounter++;
     }
 
@@ -190,9 +193,7 @@ export class ResultsService {
 
     setupSurvey(): void {
         if (this.params === null) return;
-
-        // TODO: Add tutorial page explaining ego network + explanation depending on egoNetApproach
-
+        
         const approach = this.params.egoNetApproach;
 
         // depending on approach plug in tutorial page
@@ -212,7 +213,10 @@ export class ResultsService {
                         
                         <h2>${this.titleMap.get(approach)}</h2>
                         <p>${this.tutorialRepresenation.get(approach)}</p>
-                        <img src="../assets/${approach}.png" alt="${approach}" style="width: 100%; height: auto;">
+                        <figure>
+                            <img src="./assets/${approach}.png" alt="${approach}" style="width: 100%; height: auto;">
+                            <figcaption>${this.captionRepresenation.get(approach)}</figcaption>
+                        </figure>
                     </div>`
                 }
             ]
