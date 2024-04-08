@@ -17,16 +17,7 @@ export const SURVEY_JSON = {
                     <div style="padding-top: 2em; padding-bottom: 2em; text-align: justify">
                         <p>
                             <b>Network visualizations show connections between entities, called edges and nodes respectively.</b> 
-                            Network visualizations are used across application domains.
-                            For example, in social network analysis, nodes represent people and edges represent different types of relationships between them. 
-                        </p>
-                    </div>
-
-                    <hr/>
-
-                    <div style="padding-top: 2em; padding-bottom: 2em; text-align: justify">
-                        <p>
-                            Many different types of such networks exist, such as multivariate networks, multilayer networks, and compound graphs, just to name a few. In this study, however, we are particularly interested in studying so-called <b>ego networks</b>. An ego network represents connections relative to a particular focal node, the so-called <b>ego</b>. In other words: instead of visualizing an entire network, we only visualize nodes and edges important to the ego, i.e. its neighbors, its neighbors' neighbors, etc.. 
+                            Network visualizations are used across application domains. For example, in social network analysis, nodes represent people and edges represent their relationship(s), such as colleagues, friends, or lovers. Visualizing networks effectively can assist researchers and laypeople make sense of complex relational data, such as social networks, flight paths, or biochemical interaction networks.
                         </p>
                     </div>
 
@@ -59,6 +50,7 @@ export const SURVEY_JSON = {
                     <ul style="list-style-type: disc; padding-left: 2rem;">
                         <li>You are not color-blind or suffer from any other vision impairments</li>
                         <li>You are using a large desktop or laptop monitor, i.e. not a smartphone or tablet.</li>
+                        <li>You have a mouse or trackpad with a scroll wheel or scroll functionality, respectively.</li>
                         <li>You do not navigate forth and back using the browser controls or refresh the page.</li>
                     <ul>
                     </div>
@@ -70,7 +62,7 @@ export const SURVEY_JSON = {
                         <ul style="list-style-type: disc; padding-left: 2rem;">
                             <li>Your prolific ID and provided demographic information at the beginning of the study</li>
                             <li>Your input to the text answer fields during the tasks</li>
-                            <li>Your preferences and optional feedback at the end of the study</li>
+                            <li>Your preferences and feedback at the end of the study</li>
                         </ul>
                     </div>
 
@@ -150,9 +142,9 @@ export const SURVEY_JSON = {
                 {
                     type: "rating",
                     name: "ego-rep-learn",
-                    title: "I found the ego network's visual representation easy to learn.",                    
-                    description: "Numeric rating scale",
-                    rateType: "smileys",
+                    title: "I found the ego network's visual representation easy to learn.",  
+                    description: "Numeric rating scale. Where 1 - Strongly Disagree, 2 - Disagree, 3 - Neutral, 4 - Agree, 5 - Strongly Agree.",
+                    rateType: "satisfaction-numeric",
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
@@ -166,8 +158,8 @@ export const SURVEY_JSON = {
                     type: "rating",
                     name: "ego-rep-use",
                     title: "I found the ego network's visual representation easy to use.",
-                    description: "Numeric rating scale",
-                    rateType: "smileys",
+                    description: "Numeric rating scale. Where 1 - Strongly Disagree, 2 - Disagree, 3 - Neutral, 4 - Agree, 5 - Strongly Agree.",
+                    rateType: "satisfaction-numeric",
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
@@ -181,8 +173,8 @@ export const SURVEY_JSON = {
                     type: "rating",
                     name: "ego-rep-aesth",
                     title: "I found the ego network's visual representation aesthetically pleasing.",
-                    description: "Numeric rating scale",
-                    rateType: "smileys",
+                    description: "Numeric rating scale. Where 1 - Strongly Disagree, 2 - Disagree, 3 - Neutral, 4 - Agree, 5 - Strongly Agree.",
+                    rateType: "satisfaction-numeric",
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
@@ -196,8 +188,8 @@ export const SURVEY_JSON = {
                     type: "rating",
                     name: "ego-rep-acc",
                     title: "I found the ego network's visual representation allowed me to answer questions accurately.",
-                    description: "Numeric rating scale",
-                    rateType: "smileys",
+                    description: "Numeric rating scale. Where 1 - Strongly Disagree, 2 - Disagree, 3 - Neutral, 4 - Agree, 5 - Strongly Agree.",
+                    rateType: "satisfaction-numeric",
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
@@ -211,8 +203,8 @@ export const SURVEY_JSON = {
                     type: "rating",
                     name: "ego-rep-quick",
                     title: "I found the ego networks visual representation allowed me to answer questions quickly.",
-                    description: "Numeric rating scale",
-                    rateType: "smileys",
+                    description: "Numeric rating scale. Where 1 - Strongly Disagree, 2 - Disagree, 3 - Neutral, 4 - Agree, 5 - Strongly Agree.",
+                    rateType: "satisfaction-numeric",
                     scaleColorMode: "colored",
                     rateCount: 5,
                     rateMax: 5,
@@ -223,19 +215,12 @@ export const SURVEY_JSON = {
                     // rateValues: [ 1, 2, 3, 4, 5 ]
                 },
                 {
-                    name: "ego-rep-like",
+                    name: "ego-rep-comments",
                     type: "comment",
-                    title: "What did you like about the presented ego network's visual representation?",
+                    title: "Any final thoughts about the network's visual representation?",
                     placeHolder: "Please enter your personal comments:",
                     isRequired: false,
-                },
-                {
-                    name: "ego-rep-dislike",
-                    type: "comment",
-                    title: "What did you dislike about the presented ego network's visual representation?",
-                    placeHolder: "Please enter your personal comments:",
-                    isRequired: false,
-                }
+                }            
             ]
         }
     ]
