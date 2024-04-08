@@ -25,18 +25,21 @@ export class LComponent implements OnInit {
 
     private w: number | undefined; // Width of the container
 
+    private task = '';
+
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        const task = this.resultsService.getCurrentTask();
+        this.task = this.resultsService.getCurrentTask();
         
-        if(task) {
-            this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+        if(this.task) {
+            this.nodes = this.dataService.getDatasetNodes(this.task) as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t5') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t5') as Array<EdgeExt>;
+            this.task = 'tutorial';
+            this.nodes = this.dataService.getDatasetNodes('tutorial') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('tutorial') as Array<EdgeExt>;
         } 
 
         this.hops = Array.from(new Set(this.nodes.map((d: NodeExt) => d.hop)));
@@ -295,7 +298,6 @@ export class LComponent implements OnInit {
 
         // simulation
         if (!CONFIG.PRECOMPUTED) {
-
             d3.forceSimulation<Node>(this.nodes)
                 .force('link',
                     d3.forceLink<NodeExt, EdgeExt>()
@@ -312,6 +314,8 @@ export class LComponent implements OnInit {
                         .strength(-200)
                 )
                 .on('end', this.ticked.bind(this));
+
+                console.log(this.nodes);
         } else {
             this.layout();
         }
@@ -320,13 +324,17 @@ export class LComponent implements OnInit {
     layout() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => {
-                return ((this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+                return this.task === 'tutorial' ? 
+                ((this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
+                : (this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
             })
             .attr('y1', (d: EdgeExt) => {
                 return (this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0);
             })
             .attr('x2', (d: EdgeExt) => {
-                return ((this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+                return this.task === 'tutorial' ?
+                ((this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
+                : (this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
             })
             .attr('y2', (d: EdgeExt) => {
                 return (this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0);
@@ -334,33 +342,41 @@ export class LComponent implements OnInit {
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH)- CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
+            .attr('cx', (d: NodeExt) => {
+                return this.task === 'tutorial' ?
+                ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH)- CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
+                : (d.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
+            })
             .attr('cy', (d: NodeExt) => d.ly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4))
+            .attr('x', (d: NodeExt) => {
+                return this.task === 'tutorial' ? 
+                ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
+                : (d.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
+            })
             .attr('y', (d: NodeExt) => d.ly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
     ticked() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => (d.source.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x1', (d: EdgeExt) => (d.source.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT))
             .attr('y1', (d: EdgeExt) => d.source.y)
-            .attr('x2', (d: EdgeExt) => (d.target.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x2', (d: EdgeExt) => (d.target.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT))
             .attr('y2', (d: EdgeExt) => d.target.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('cx', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT))
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 4)
+            .attr('x', (d: NodeExt) => (d.x) + (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT))
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }

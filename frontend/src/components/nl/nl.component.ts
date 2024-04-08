@@ -23,19 +23,21 @@ export class NlComponent implements OnInit {
 
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
-    
+
+    private task = '';
     // width of svg container
     private w: number | undefined;
 
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        const task = this.resultsService.getCurrentTask();
+        this.task = this.resultsService.getCurrentTask();
 
-        if (task) {
-            this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+        if (this.task) {
+            this.nodes = this.dataService.getDatasetNodes(this.task) as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t5') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t5') as Array<EdgeExt>;
+            this.task = 'tutorial';
+            this.nodes = this.dataService.getDatasetNodes('tutorial') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('tutorial') as Array<EdgeExt>;
         }
 
         this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
@@ -196,7 +198,7 @@ export class NlComponent implements OnInit {
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
+            // .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
 
@@ -291,9 +293,11 @@ export class NlComponent implements OnInit {
                     d3.forceCenter(
                         ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2.0,
                         (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.TOP) / 2.0)
-                        .strength(0.1)
+                        .strength(0.2)
                 )
                 .on('end', this.ticked.bind(this));
+
+            console.log(this.nodes)
         } else {
             this.layout();
         }
@@ -302,13 +306,17 @@ export class NlComponent implements OnInit {
     layout() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.source)?.nlx || 0;
+                return this.task === 'tutorial' ? 
+                this.nodes.find((n: NodeExt) => n.id === d.source)?.nlx || 0
+                : (this.nodes.find((n: NodeExt) => n.id === d.source)?.nlx || 0) + (this.w ? this.w : CONFIG.WIDTH) / 4;
             })
             .attr('y1', (d: EdgeExt) => {
                 return this.nodes.find((n: NodeExt) => n.id === d.source)?.nly || 0;
             })
             .attr('x2', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.target)?.nlx || 0; 
+                return this.task === 'tutorial' ? 
+                this.nodes.find((n: NodeExt) => n.id === d.target)?.nlx || 0
+                : (this.nodes.find((n: NodeExt) => n.id === d.target)?.nlx || 0) + (this.w ? this.w : CONFIG.WIDTH) / 4; 
             })
             .attr('y2', (d: EdgeExt) => {
                 return this.nodes.find((n: NodeExt) => n.id === d.target)?.nly || 0; 
@@ -316,13 +324,21 @@ export class NlComponent implements OnInit {
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.nlx || 0)
+            .attr('cx', (d: NodeExt) => {
+                return this.task === 'tutorial' ? 
+                (d.nlx || 0)
+                : (d.nlx || 0) + (this.w ? this.w : CONFIG.WIDTH) / 4;
+            })
             .attr('cy', (d: NodeExt) => d.nly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.nlx || 0)
+            .attr('x', (d: NodeExt) => {
+                return this.task === 'tutorial' ? 
+                d.nlx || 0
+                : (d.nlx || 0) + (this.w ? this.w : CONFIG.WIDTH) / 4;
+            })
             .attr('y', (d: NodeExt) => d.nly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }

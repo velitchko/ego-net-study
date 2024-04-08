@@ -27,22 +27,24 @@ export class MComponent implements AfterViewInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
+    private task = '';
+
     // width
     private w: number | undefined;
 
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        const task = this.resultsService.getCurrentTask();
+        this.task = this.resultsService.getCurrentTask();
 
-        if (task) {
-            this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+        if (this.task) {
+            this.nodes = this.dataService.getDatasetNodes(this.task) as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
             this.nodes = this.dataService.getDatasetNodes('t2') as Array<NodeExt>;
             this.edges = this.dataService.getDatasetEdges('t2') as Array<EdgeExt>;
         }
 
         this.nodes.sort((a: NodeExt, b: NodeExt) => {
-            return a.hop - b.hop;
+            return a.hop - b.hop || b.weight - a.weight;
         });
 
         this.cellsSelection = d3.select('#m-container').selectAll('rect.node');
@@ -375,8 +377,12 @@ export class MComponent implements AfterViewInit {
             .attr('class', 'node-circle-x')
             .attr('id', (d: Node) => `node-circle-x${d.id}`)
             .attr('cx', (d: Node) => (x(d.id.toString()) || 0) + x.bandwidth() / 2)
-            .attr('cy', -10)
-            .attr('r', 6)
+            .attr('cy', () => {
+                return this.task === 'tutorial' ? -20 : -10;
+            })
+            .attr('r', () => {
+                return this.task === 'tutorial' ? 20 : 6;
+            })
             .attr('fill', (d: Node) => this.colorService.getFill(d.hop));
 
         const circlesY = matrix.selectAll('.node-circle-y')
@@ -385,15 +391,23 @@ export class MComponent implements AfterViewInit {
             .append('circle')
             .attr('class', 'node-circle-y')
             .attr('id', (d: Node) => `node-circle-y${d.id}`)
-            .attr('cx', -10)
+            .attr('cx', () => {
+                return this.task === 'tutorial' ? -20 : -10;
+            })
             .attr('cy', (d: Node) => (y(d.id.toString()) || 0) + y.bandwidth() / 2)
-            .attr('r', 6)
+            .attr('r', () => {
+                return this.task === 'tutorial' ? 20 : 6;
+            })
             .attr('fill', (d: Node) => this.colorService.getFill(d.hop));
 
         const axisX = matrix.append('g')
             .attr('id', 'xaxis')
-            .style('font-size', '6pt')
-            .attr('transform', `translate(6, -5)`)
+            .style('font-size', () => {
+                return this.task === 'tutorial' ? '12pt' : '6pt';
+            })
+            .attr('transform', () => {
+                return this.task === 'tutorial' ? `translate(10, -10)` : `translate(6, -5)`;
+            })
             .call(xAxis)
 
         this.xAxiesSelection = axisX
@@ -409,8 +423,12 @@ export class MComponent implements AfterViewInit {
 
         const axisY = matrix.append('g')
             .attr('id', 'yaxis')
-            .style('font-size', '6pt')
-            .attr('transform', `translate(-1, 2)`)
+            .style('font-size', () => {
+                return this.task === 'tutorial' ? '12pt' : '6pt';
+            })
+            .attr('transform', () => {
+                return this.task === 'tutorial' ? `translate(-2, 2)` : `translate(-1, 2)`;
+            })
             .call(yAxis)
 
         this.yAxiesSelection = axisY

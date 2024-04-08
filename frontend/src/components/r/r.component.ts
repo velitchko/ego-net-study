@@ -32,18 +32,21 @@ export class RComponent implements OnInit {
     // zoom 
     private zoom: d3.ZoomBehavior<Element, unknown>;
 
+    private task = '';
+
     // width
     private w: number | undefined;
 
     constructor(private dataService: DataService, private resultsService: ResultsService, private errorService: GlobalErrorHandler, private colorService: ColorService) {
-        const task = this.resultsService.getCurrentTask();
+        this.task = this.resultsService.getCurrentTask();
 
-        if (task) {
-            this.nodes = this.dataService.getDatasetNodes(task) as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges(task) as Array<EdgeExt>;
+        if (this.task) {
+            this.nodes = this.dataService.getDatasetNodes(this.task) as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
-            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
+            this.task = 'tutorial';
+            this.nodes = this.dataService.getDatasetNodes('tutorial') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('tutorial') as Array<EdgeExt>;
         }
 
         this.hops = this.nodes.map((d: NodeExt) => d.hop);
@@ -207,8 +210,9 @@ export class RComponent implements OnInit {
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
-        
+            .attr('transform', 'translate(0,' + CONFIG.MARGINS.TOP + ')');
+        //' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + '
+
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
 
         this.tooltipSelection
@@ -260,7 +264,7 @@ export class RComponent implements OnInit {
             .attr('stroke-width', 1)
             .attr('stroke-dasharray', '5, 5')
             .attr('stroke', 'gray')
-            .attr('cx', (CONFIG.WIDTH - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
+            .attr('cx', ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
             .attr('cy', (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2);
 
         const nodes = g.append('g')
@@ -326,6 +330,7 @@ export class RComponent implements OnInit {
                         (CONFIG.HEIGHT - CONFIG.MARGINS.TOP - CONFIG.MARGINS.BOTTOM) / 2.0)
                 )
                 .on('end', this.ticked.bind(this));
+
         } else {
             this.layout();
         }
@@ -334,13 +339,17 @@ export class RComponent implements OnInit {
     layout() {
         this.edgesSelection
             .attr('x1', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.source)?.rx || 0 
+                return this.task === 'tutorial' ?
+                (this.nodes.find((n: NodeExt) => n.id === d.source)?.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
+                : ((this.nodes.find((n: NodeExt) => n.id === d.source)?.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
             })
             .attr('y1', (d: EdgeExt) => {
                 return this.nodes.find((n: NodeExt) => n.id === d.source)?.ry || 0 
             })
             .attr('x2', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.target)?.rx || 0 
+                return this.task === 'tutorial' ? 
+                (this.nodes.find((n: NodeExt) => n.id === d.target)?.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
+                : ((this.nodes.find((n: NodeExt) => n.id === d.target)?.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
             })
             .attr('y2', (d: EdgeExt) => {
                 return this.nodes.find((n: NodeExt) => n.id === d.target)?.ry || 0 
@@ -348,33 +357,41 @@ export class RComponent implements OnInit {
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.rx || 0)
-            .attr('cy', (d: NodeExt) => d.ry || 0)
+            .attr('cx', (d: NodeExt) => {
+                return this.task === 'tutorial' ? 
+                (d.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
+                : (d.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4 - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
+            })
+            .attr('cy', (d: NodeExt) => (d.ry || 0))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.rx || 0)
+            .attr('x', (d: NodeExt) => {
+                return this.task === 'tutorial' ?
+                (d.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
+                : (d.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4 - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
+            })
             .attr('y', (d: NodeExt) => d.ry || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
     }
 
     ticked() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => d.source.x)
+            .attr('x1', (d: EdgeExt) => d.source.x - (this.w ? this.w : CONFIG.WIDTH) / 4 + (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2)
             .attr('y1', (d: EdgeExt) => d.source.y)
-            .attr('x2', (d: EdgeExt) => d.target.x)
+            .attr('x2', (d: EdgeExt) => d.target.x - (this.w ? this.w : CONFIG.WIDTH) / 4 + (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2)
             .attr('y2', (d: EdgeExt) => d.target.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => d.x)
+            .attr('cx', (d: NodeExt) => (d.x) - (this.w ? this.w : CONFIG.WIDTH) / 4 + (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2)
             .attr('cy', (d: NodeExt) => d.y)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => d.x)
+            .attr('x', (d: NodeExt) => d.x - (this.w ? this.w : CONFIG.WIDTH) / 4 + (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2)
             .attr('y', (d: NodeExt) => d.y)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
     }
