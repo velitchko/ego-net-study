@@ -11,8 +11,7 @@ type QualitativeAnswer = {
     aesth: number,
     acc: number,
     quick: number,
-    like: string,
-    dislike: string
+    comments: string
 };
 
 type DemographicAnswer = {
@@ -88,26 +87,62 @@ export class ResultsService {
     ]);
 
     protected tutorialRepresenation: Map<string, string> = new Map([
-        ['matrix', `Adjacency matrix representations of ego networks display the connectivity between entities tabularly. Each entity, i.e. node, is represented twice, once as a labeled row, and once as a labeled column. If a connection, i.e. an edge, exists between two nodes the corresponding matrix cell is “filled”. This means that each edge is represented twice as well. For example, if an edge connects nodes 3 and 5, then the matrix cells at locations (3,5) and (5,3) are filled in. Don't count these twice though - this is still just one edge. Note that, because nodes cannot be connected to themselves, the diagonal of the matrix is empty. Lastly, the darker a cell is colored, the stronger the edge connecting two nodes is. 
-        <br/>
-        The ego of a particular ego network will always be represented at the top left of the matrix table (in the example below node #34). Alters are arranged in colored blocks depending on their proximity to the ego. That is to say that, after the ego, the first colored block consists of 1-alters, the second of 2-alters, and so forth. Alter intra-alter edges and nodes are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. Inter-alter edges are colored in black.
-        <br/>
-        During the actual evaluation, the graph will be interactive. You will be able to zoom in and out, pan, and highlight the neighbors of individual nodes.`],
-        ['nodelink', `The node-link diagram is the most common form of network representation. In it, each entity, i.e. node, is represented as a circle, whose label is positioned at the circle's center. A relationship, i.e. an edge, connecting two particular nodes is drawn as a straight line between them. The darker the line, the stronger the edge connecting two nodes is.        
-        <br/>
-        The ego, in the example below node #34, of a particular network is colored black. Alters, as well as intra-alter edges, are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. Inter-alter edges are colored in black.
-        <br/>
-        During the actual evaluation, the graph will be interactive. You will be able to zoom in and out, pan, and highlight the neighbors of individual nodes.`],
-        ['layered', `In a layered node-link diagram, each entity, i.e. node, is represented as a circle with its label positioned at the circle's center. A relationship, i.e. an edge, connecting two particular nodes is drawn as a straight line between them. The darker the line, the stronger the edge connecting two nodes is. 
-        <br/>
-        The network's ego, in the example below node #34, is positioned at the top of the diagram, colored in black. Alters, as well as intra-alter edges, are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. Additionally, alters are placed along layered lines beneath the ego, i.e. 1-alters are placed along the first line, 2-alters along the second, and so on. Inter-alter edges are colored in grey and connect nodes between such layers.
-        <br/>
-        During the actual evaluation, the graph will be interactive. You will be able to zoom in and out, pan, and highlight the neighbors of individual nodes.`],
-        ['radial', `In a radial node-link diagram, each entity, i.e. node, is represented as a circle with its label positioned at the circle's center. A relationship, i.e. an edge, connecting two particular nodes is drawn as a straight line between them. The darker the line, the stronger the edge connecting two nodes is.
-        <br/>
-        The network's ego, in the example below node #34, is positioned at the center of the diagram, colored in black. Alters, as well as intra-alter edges, are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. Additionally, alters are placed along concentric circles around the ego, i.e. 1-alters are placed along the first ring, 2-alters along the second, and so on. Inter-alter edges are colored in grey and connect nodes between such concentric circles.
-        <br/>
-        During the actual evaluation, the graph will be interactive. You will be able to zoom in and out, pan, and highlight the neighbors of individual nodes.`]
+        ['matrix', `
+            <p style="padding-bottom: .5em;">
+            Adjacency matrix representations of ego networks display the connectivity between entities tabularly. <b>Each entity, i.e. node, is represented twice</b>, once as a labeled row, and once as a labeled column. If a connection, i.e. an edge, exists between two nodes the corresponding matrix cell is “filled”. This means that <b>each edge is represented twice as well</b>. For example, if an edge connects nodes 3 and 5, then the matrix cells at locations (3,5) and (5,3) are filled in. Don’t count these twice though - this is still just one edge. 
+            </p>
+            <p style="padding-bottom: .5em;">
+            The <b>ego of a particular ego network will always be represented at the top left</b> of the matrix table (in the example below node #34). Alters are arranged in colored blocks depending on their proximity to the ego. That is to say that, after the ego, the first colored block consists of 1-alters, the second of 2-alters, and so forth. The nodes of each block are displayed along the columns and rows and are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink.
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>Intra-alter edges connect two nodes of the same alter level, i.e. connections within a block</b>, and (like the alters themselves) are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. <b>Inter-alter edges connect two nodes of different alter levels, i.e. connections between colored blocks</b>, and are colored in black. <b>The darker a cell is colored, the stronger the edge connecting two nodes is.</b>
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>The visualization is interactive</b>. You can click and drag in order to pan, and you can zoom in and out using your scroll wheel. By hovering over a node you can see its connections and neighbors.
+            </p>
+        `],
+        ['nodelink', `
+            <p style="padding-bottom: .5em;">
+            The node-link diagram is the most common form of network representation. In it, each entity, i.e. <b>node, is represented as a circle</b>, whose label is positioned at the circle’s center. A relationship, i.e. an <b>edge, connecting two particular nodes is drawn as a straight line between them. The darker the line, the stronger the edge connecting two nodes is.</b>
+            </p>
+            <p style="padding-bottom: .5em;">
+            The ego, in the example below node #34, of a particular network is colored black. Alters are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink.
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>Intra-alter edges connect two nodes of the same alter level</b>, and (like the alters themselves) are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. <b>Inter-alter edges connect two nodes of different alter levels</b> and are colored in black. <b>The thicker the line, the stronger the edge connecting two nodes is.</b>
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>The visualization is interactive</b>. You can click and drag in order to pan, and you can zoom in and out using your scroll wheel. By hovering over a node you can see its connections and neighbors.
+            </p>
+        `],
+        ['layered', `
+            <p style="padding-bottom: .5em;">
+            In a layered node-link diagram, each entity, i.e. <b>node, is represented as a circle</b> with its label positioned at the circle’s center. A relationship, i.e. an <b>edge, connecting two particular nodes is drawn as a straight line</b> between them. <b>The darker the line, the stronger the edge connecting two nodes is.</b>
+            </p>
+            <p style="padding-bottom: .5em;">
+            The network’s ego, in the example below node #34, is positioned at the top of the diagram, colored in black. <b>Each alter-level has its nodes distributed along the corresponding horizontal line</b>: the ego along the first line, 1-alters along the second, 2-alters along the third, and so on.
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>Intra-alter edges connect two nodes of the same alter level, i.e. connect nodes within an alter-line</b>, and (like the alters themselves) are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. <b>Inter-alter edges connect two nodes of different alter levels, i.e. connect nodes between alter-lines</b> and are colored in black. <b>The thicker the line, the stronger the edge connecting two nodes is.</b>
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>The visualization is interactive</b>. You can click and drag in order to pan, and you can zoom in and out using your scroll wheel. By hovering over a node you can see its connections and neighbors.
+            </p>
+        `],
+        ['radial', `
+            <p style="padding-bottom: .5em;">
+            In a radial node-link diagram, each entity, i.e. <b>node, is represented as a circle</b> with its label positioned at the circle’s center. A relationship, i.e. an <b>edge, connecting two particular nodes is drawn as a straight line between them</b>. The darker the line, the stronger the edge connecting two nodes is.
+            </p>
+            <p style="padding-bottom: .5em;">
+            The network’s ego, in the example below node #34, is positioned at the center of the diagram, colored in black. <b>Alters are placed along concentric circles around the ego</b>, i.e. 1-alters are placed along the first ring, 2-alters along the second, and so on. Alters are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink.
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>Intra-alter edges connect two nodes of the same alter level, i.e. nodes on the same ring</b>, and (like the alters themselves) are color-coded: 1-alters in green, 2-alters in orange, 3-alters in blue, and 4-alters in pink. <b>Inter-alter edges connect two nodes of different alter levels, i.e. nodes on different rings</b>, and are colored in black. <b>The thicker the line, the stronger the edge connecting two nodes is.</b>
+            </p>
+            <p style="padding-bottom: .5em;">
+            <b>The visualization is interactive</b>. You can click and drag in order to pan, and you can zoom in and out using your scroll wheel. By hovering over a node you can see its connections and neighbors.
+            </p>
+        `]
     ]);
 
     protected captionRepresenation: Map<string, string> = new Map([
@@ -127,6 +162,8 @@ export class ResultsService {
 
     setUserParams(params: Params): void {
         this.params = params;
+        this.params.taskCodes.unshift('tutorial');
+        this.params.taskDescriptions.unshift('');
 
         // add metadata to results
         this.results.push({
@@ -213,11 +250,12 @@ export class ResultsService {
                         
                         <h2>${this.titleMap.get(approach)}</h2>
                         <p>${this.tutorialRepresenation.get(approach)}</p>
-                        <figure>
-                            <img src="./assets/${approach}.png" alt="${approach}" style="width: 100%; height: auto;">
-                            <figcaption>${this.captionRepresenation.get(approach)}</figcaption>
-                        </figure>
                     </div>`
+                },
+                {
+                    type: this.questionMap.get(approach) as string,
+                    title: this.titleMap.get(approach) as string,
+                    description: ''
                 }
             ]
         };
@@ -227,11 +265,24 @@ export class ResultsService {
 
         // iterate over this.params.eogNetApproaches
         this.params.taskCodes.forEach((task, i) => {
+            if(task === 'tutorial') return;
             // construct question
             const question = {
                 name: `${approach}-${task}`,
 
                 elements: [
+                    {
+                        type: 'html',
+                        html: `
+                        <h2>${this.titleMap.get(approach) as string}</h2>
+                        <p>${this.tutorialRepresenation.get(approach) as string}</p>
+                        ` 
+                    },
+                    {
+                        type: this.questionMap.get(approach) as string,
+                        description: this.titleMap.get(approach) as string,
+                        title: this.params?.taskDescriptions[i]
+                    },
                     {
                         type: 'text',
                         placeholder: this.taskInputType.get(task) === 'number' ? 'Enter your answer (number)' : 'Enter your answer here (comma separated)',
@@ -239,21 +290,35 @@ export class ResultsService {
                         isRequired: true,
                         title: 'Answer',
                         name: `${approach}-${task}-answer`
+                    }
+                ]
+            };
+
+            const feedback = {
+                name: `${approach}-${task}-feedback`,
+                elements: [
+                    {
+                        type: 'html',
+                        html: `
+                        <h3>The task was:</h3>
+                        <p style="font-size: 1.5rem;">${this.params?.taskDescriptions[i]}</p>
+                        `
                     },
                     {
-                        type: this.questionMap.get(approach) as string,
-                        title: this.titleMap.get(approach) as string,
-                        description: this.params?.taskDescriptions[i]
+                        type: 'comment', 
+                        title: 'Comments',
+                        name: `${approach}-${task}-feedback`,
+                        isRequired: true,
+                        placeHolder: 'What did you think about this task?'
                     }
                 ]
             };
 
             // put question after intro page
-            SURVEY_JSON.pages.splice(i + 3, 0, question);
+            SURVEY_JSON.pages.splice(i * 2 + 1, 0, question);
+            SURVEY_JSON.pages.splice(i * 2 + 2, 0, feedback);
         });
-
         console.log(SURVEY_JSON);
-        
         this.surveySetup = true;
     }
 
@@ -270,6 +335,7 @@ export class ResultsService {
     }
 
     submitResults(): Observable<any> {
+        console.log(this.results);
         // submits results to backend
         return this.http.post(`${CONFIG.API_BASE}results`, { params: this.params, results: this.results });
     }
