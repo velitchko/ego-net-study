@@ -45,7 +45,7 @@ export class SurveyComponent {
         }
 
         const survey = new Model(this.resultsService.getSurvey());
-        // survey.applyTheme(LayeredDarkPanelless);        
+        // survey.applyTheme(LayeredDarkPanelless);       
 
         this.survey = survey;
         
@@ -86,7 +86,29 @@ export class SurveyComponent {
 
             if(options.oldCurrentPage.name === 'tutorial') {
                 console.log('📊 Tutorial page');
+                this.resultsService.pushResult({
+                    index: -99,
+                    time: 0,
+                    task: 'tutorial',
+                    representation: '',
+                    answer: ''
+                }, true);
 
+                this.timer.start = Date.now();
+                return;
+            }
+
+            if(options.oldCurrentPage.name.includes('feedback') && options.oldCurrentPage.name !== 'qualitative-feedback') {
+                // push to results
+                this.resultsService.pushResult({
+                    index: -99,
+                    time: 0,
+                    task: options.oldCurrentPage.name,
+                    representation: options.oldCurrentPage.name,
+                    answer: sender.data[`${options.oldCurrentPage.name}`]
+                }, true);
+
+                // reset start time
                 this.timer.start = Date.now();
                 return;
             }
@@ -103,10 +125,7 @@ export class SurveyComponent {
                 // GET SUBSTRING FROM START TO options.newCurrentPage.name.split('-')[options.newCurrentPage.name.split('-').length - 1]
                 representation: options.oldCurrentPage.name.split('-')[0],
                 answer: sender.data[`${options.oldCurrentPage.name}-answer`]
-            }, true);
-
-            // reset start time
-            this.timer.start = Date.now();
+            });
         });
 
         this.survey.onComplete.add((sender) => {
@@ -116,8 +135,7 @@ export class SurveyComponent {
                 aesth: sender.data['ego-rep-aesth'],
                 acc: sender.data['ego-rep-acc'],
                 quick: sender.data['ego-rep-quick'],
-                like: sender.data['ego-rep-like'],
-                dislike: sender.data['ego-rep-dislike']
+                comments: sender.data['ego-rep-comments']
             };
 
             // push to results
