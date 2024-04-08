@@ -10,8 +10,8 @@ const taskCodes = [ 't1', 't2', 't3', 't4', 't5', 't6' ];
 const taskDescriptions = new Map([
     ['t1', 'Find the 2-alter node with the largest number of neighbors.'],
     ['t2', 'List the common neighbors of nodes 9 and 31.'],
-    ['t3', 'Count the number of neighbors of node 52'],
-    ['t4', 'Count the number of intra-1-alter edges.'],
+    ['t3', 'Count all of the neighbors of node 52'],
+    ['t4', 'Count the number of intra-1-alter edges (edges between 1-alter nodes).'],
     ['t5', 'Count the number of 2-alter nodes.'],
     ['t6', 'Find the alter most strongly associated with the ego node 26']
 ]);
