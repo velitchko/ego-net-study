@@ -18,6 +18,7 @@ import { DATA_T_FIVE } from '../assets/miserables.8508913866583860255.60';
 import { DATA_T_SIX_PRE } from '../assets/miserables.4363687599787157139.26_precomputed';
 import { DATA_T_SIX } from '../assets/miserables.4363687599787157139.26';
 
+import { DATA_TUTORIAL } from '../assets/tutorial';
 
 import { CONFIG } from '../assets/config';
 
@@ -63,6 +64,8 @@ export class DataService {
         ['t6', CONFIG.PRECOMPUTED ? DATA_T_SIX_PRE : DATA_T_SIX],
     ]);
 
+    private tutorialData: any; 
+
     private parsedData: Map<string, { nodes: Array<Node>, edges: Array<Edge>, matrix: Array<Cell> }>;
 
     constructor() {
@@ -78,17 +81,27 @@ export class DataService {
                 this.parsedData.set(key, { nodes: parsed.nodes, edges: parsed.links, matrix: parsed.matrix || [] });
             }
         });
+        this.tutorialData = CONFIG.PRECOMPUTED ? this.parsePrecomputedData(DATA_TUTORIAL) : this.parseData(DATA_TUTORIAL);
+    }
 
+    getTutorialNodes(): Array<Node> {
+        return this.tutorialData.nodes;
+    }
 
-        console.log(this.parsedData);
+    getTutorialEdges(): Array<Edge> {
+        return this.tutorialData.links;
     }
 
     // get data per task type
     getDatasetNodes(key: string): Array<Node> {
+        if(key === 'tutorial') return this.getTutorialNodes();
+
         return this.parsedData.get(key)?.nodes.slice() || this.parseData('t1').nodes.slice();
     }
 
     getDatasetEdges(key: string): Array<Edge> {
+        if(key === 'tutorial') return this.getTutorialEdges();
+
         return this.parsedData.get(key)?.edges.slice() ||  this.parseData('t1').links.slice();
     }
 
