@@ -283,7 +283,7 @@ export class MComponent implements AfterViewInit {
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
-                d3.select('#m-container').selectAll('#matrix')
+                d3.select('#m-container').select('#wrapper')
                     .attr('transform', $event.transform);
             });
 
@@ -297,12 +297,13 @@ export class MComponent implements AfterViewInit {
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
-            .attr('transform', 'translate(' + (((this.w ? this.w : CONFIG.WIDTH)/4) + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
-
+            .attr('id', 'wrapper');
+            
         const inbetweens = this.getInbetweens(this.getEnds(this.nodes));
 
         const matrix = g.append('g')
-            .attr('id', 'matrix');
+            .attr('id', 'matrix')
+            .attr('transform', 'translate(' + (((this.w ? this.w : CONFIG.WIDTH)/4) + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = matrix.append('g').attr('id', 'tooltip');
 
