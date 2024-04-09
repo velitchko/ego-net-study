@@ -195,13 +195,13 @@ export class RComponent implements OnInit {
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
-                d3.select('#r-container').selectAll('g')
+                d3.select('#r-container').select('#wrapper')
                     .attr('transform', $event.transform);
             });
 
         // get width of #dthree container
         this.w = document?.getElementById('dthree')?.offsetWidth;
-        
+
         // set svg width and height 
         const svg = d3.select('#r-container')
             .attr('width', (this.w ? this.w : CONFIG.WIDTH))
@@ -210,6 +210,7 @@ export class RComponent implements OnInit {
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
+            .attr('id', 'wrapper')
             .attr('transform', 'translate(0,' + CONFIG.MARGINS.TOP + ')');
         //' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + '
 
@@ -338,42 +339,32 @@ export class RComponent implements OnInit {
 
     layout() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => {
-                return this.task === 'tutorial' ?
-                (this.nodes.find((n: NodeExt) => n.id === d.source)?.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-                : ((this.nodes.find((n: NodeExt) => n.id === d.source)?.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-            })
-            .attr('y1', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.source)?.ry || 0 
-            })
-            .attr('x2', (d: EdgeExt) => {
-                return this.task === 'tutorial' ? 
-                (this.nodes.find((n: NodeExt) => n.id === d.target)?.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-                : ((this.nodes.find((n: NodeExt) => n.id === d.target)?.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-            })
-            .attr('y2', (d: EdgeExt) => {
-                return this.nodes.find((n: NodeExt) => n.id === d.target)?.ry || 0 
-            })
+            .attr('x1', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.source)?.rx || 0)
+            .attr('y1', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.source)?.ry || 0)
+            .attr('x2', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.target)?.rx || 0)
+            .attr('y2', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.target)?.ry || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => {
-                return this.task === 'tutorial' ? 
-                (d.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-                : (d.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4 - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-            })
-            .attr('cy', (d: NodeExt) => (d.ry || 0))
+            .attr('cx', (d: NodeExt) => d.rx || 0)
+            .attr('cy', (d: NodeExt) => d.ry || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => {
-                return this.task === 'tutorial' ?
-                (d.rx || 0) - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-                : (d.rx || 0) + ((this.w ? this.w : CONFIG.WIDTH)) / 4 - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT) * 2
-            })
+            .attr('x', (d: NodeExt) => d.rx || 0)
             .attr('y', (d: NodeExt) => d.ry || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+
+        const bbox = (d3.select('#guides').node() as any)?.getBBox();
+        let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2 
+        if (this.task === 'tutorial') {
+            trans = trans - bbox.width / 2 + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT;
+
+        }
+        d3.select('#nodes').attr('transform', `translate(${trans}, 0)`);
+        d3.select('#links').attr('transform', `translate(${trans}, 0)`);
+        d3.select('#labels').attr('transform', `translate(${trans}, 0)`);
     }
 
     ticked() {
