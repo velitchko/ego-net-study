@@ -185,7 +185,7 @@ export class LComponent implements OnInit {
         this.zoom
             .scaleExtent([0.1, 10])
             .on('zoom', ($event: any) => {
-                d3.select('#l-container').selectAll('g')
+                d3.select('#l-container').select('#wrapper')
                     .attr('transform', $event.transform);
             });
         
@@ -198,6 +198,7 @@ export class LComponent implements OnInit {
             .call(this.zoom.bind(this));
 
         const g = svg.append('g')
+        .attr('id', 'wrapper')
         .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
@@ -227,7 +228,7 @@ export class LComponent implements OnInit {
             .text('Node');
 
         const link = g.append('g')
-            .attr('class', 'links');
+            .attr('id', 'links');
 
         this.edgesSelection = link
             .selectAll('line')
@@ -240,7 +241,7 @@ export class LComponent implements OnInit {
             .attr('stroke-opacity', 0);
 
         const guides = g.append('g')
-            .attr('class', 'guides');
+            .attr('id', 'guides');
 
         this.guidesSelection = guides
             .selectAll('line')
@@ -258,7 +259,7 @@ export class LComponent implements OnInit {
             .attr('y2', (d: number) => d * 200);
 
         const node = g.append('g')
-            .attr('class', 'nodes');
+            .attr('id', 'nodes');
 
         this.nodesSelection = node
             .selectAll('circle')
@@ -278,7 +279,7 @@ export class LComponent implements OnInit {
             .on('mouseout', this.mouseout.bind(this));
 
         const label = g.append('g')
-            .attr('class', 'labels');
+            .attr('id', 'labels');
 
         this.textsSelection = label
             .selectAll('text')
@@ -323,42 +324,30 @@ export class LComponent implements OnInit {
 
     layout() {
         this.edgesSelection
-            .attr('x1', (d: EdgeExt) => {
-                return this.task === 'tutorial' ? 
-                ((this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
-                : (this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
-            })
-            .attr('y1', (d: EdgeExt) => {
-                return (this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0);
-            })
-            .attr('x2', (d: EdgeExt) => {
-                return this.task === 'tutorial' ?
-                ((this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0) + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
-                : (this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
-            })
-            .attr('y2', (d: EdgeExt) => {
-                return (this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0);
-            })
+            .attr('x1', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.source)?.lx || 0)
+            .attr('y1', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.source)?.ly || 0)
+            .attr('x2', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.target)?.lx || 0)
+            .attr('y2', (d: EdgeExt) => this.nodes.find((n: NodeExt) => n.id === d.target)?.ly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
         this.nodesSelection
-            .attr('cx', (d: NodeExt) => {
-                return this.task === 'tutorial' ?
-                ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH)- CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
-                : (d.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
-            })
+            .attr('cx', (d: NodeExt) => d.lx || 0)
             .attr('cy', (d: NodeExt) => d.ly || 0)
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.textsSelection
-            .attr('x', (d: NodeExt) => {
-                return this.task === 'tutorial' ? 
-                ((d.lx || 0)  + ((this.w ? this.w : CONFIG.WIDTH) - CONFIG.MARGINS.LEFT - CONFIG.MARGINS.RIGHT) / 2)
-                : (d.lx || 0)  + (this.w ? this.w : CONFIG.WIDTH)/2  - (CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT)*4;
-            })
+            .attr('x', (d: NodeExt) => d.lx || 0)
             .attr('y', (d: NodeExt) => d.ly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+
+        const bbox = (d3.select('#nodes').node() as any)?.getBBox();
+
+        let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width/2 + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2;
+
+        d3.select('#nodes').attr('transform', `translate(${trans}, 0)`);
+        d3.select('#labels').attr('transform', `translate(${trans}, 0)`);
+        d3.select('#links').attr('transform', `translate(${trans}, 0)`);
     }
 
     ticked() {
