@@ -219,7 +219,7 @@ export const SURVEY_JSON = {
                     type: "comment",
                     title: "Any final thoughts about the network's visual representation?",
                     placeHolder: "Please enter your personal comments:",
-                    isRequired: false,
+                    isRequired: true,
                 }            
             ]
         }
