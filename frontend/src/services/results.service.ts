@@ -271,13 +271,13 @@ export class ResultsService {
                 name: `${approach}-${task}`,
 
                 elements: [
-                    {
-                        type: 'html',
-                        html: `
-                        <h2>${this.titleMap.get(approach) as string}</h2>
-                        <p>${this.tutorialRepresenation.get(approach) as string}</p>
-                        ` 
-                    },
+                    // {
+                    //     type: 'html',
+                    //     html: `
+                    //     <h2>${this.titleMap.get(approach) as string}</h2>
+                    //     <p>${this.tutorialRepresenation.get(approach) as string}</p>
+                    //     ` 
+                    // },
                     {
                         type: this.questionMap.get(approach) as string,
                         description: this.titleMap.get(approach) as string,
