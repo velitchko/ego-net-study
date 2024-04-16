@@ -198,6 +198,7 @@ export class NlComponent implements OnInit {
 
         // append g element and add zoom and drag to it 
         const g = svg.append('g')
+            .attr('id', 'wrapper')
             // .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = g.append('g').attr('id', 'tooltip');
@@ -341,6 +342,21 @@ export class NlComponent implements OnInit {
             })
             .attr('y', (d: NodeExt) => d.nly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+
+        
+            const bbox = (d3.select('#wrapper').node() as any)?.getBBox();
+            let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2 
+            if(this.task !== 'tutorial') {
+                trans = trans - bbox.width / 2 + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT;
+
+                d3.select('#nodes').attr('transform', `translate(${trans}, 0)`);
+                d3.select('#links').attr('transform', `translate(${trans}, 0)`);
+                d3.select('#labels').attr('transform', `translate(${trans}, 0)`);
+            } else {
+                d3.select('#nodes').attr('transform', `translate(${-bbox.width/2}, 0)`);
+                d3.select('#links').attr('transform', `translate(${-bbox.width/2}, 0)`);
+                d3.select('#labels').attr('transform', `translate(${-bbox.width/2}, 0)`);
+            }
     }
 
     ticked() {

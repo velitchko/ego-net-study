@@ -303,7 +303,7 @@ export class MComponent implements AfterViewInit {
 
         const matrix = g.append('g')
             .attr('id', 'matrix')
-            .attr('transform', 'translate(' + (((this.w ? this.w : CONFIG.WIDTH)/4) + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
+            // .attr('transform', 'translate(' + (((this.w ? this.w : CONFIG.WIDTH)/4) + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
         this.tooltipSelection = matrix.append('g').attr('id', 'tooltip');
 
@@ -463,5 +463,13 @@ export class MComponent implements AfterViewInit {
             .attr('rx', 2)
             .attr('ry', 2)
             .style('pointer-events', 'none');
+
+        const bbox = (d3.select('#wrapper').node() as any)?.getBBox();
+        let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2 
+        if (this.task !== 'tutorial') {
+            d3.select('#wrapper').attr('transform', `translate(${trans}, 0)`);
+        } else {
+            d3.select('#wrapper').attr('transform', `translate(40, 40)`);
+        }
     }
 }
