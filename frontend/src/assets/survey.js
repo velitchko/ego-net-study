@@ -130,8 +130,8 @@ export const SURVEY_JSON = {
                     name: "network_knowledge",
                     title: "How familiar / experienced are you with network visualizations (self-assessment)?",
                     isRequired: true,
-                    colCount: 3,
-                    choices: ["None", "Quite Familiar", "Expert"]
+                    colCount: 5,
+                    choices: ["No Experience", "Little Experience", "Some Experience", "Good Experience", "Extensive Experience"]
                 }
             ]
         },
