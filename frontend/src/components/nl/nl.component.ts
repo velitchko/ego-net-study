@@ -36,8 +36,8 @@ export class NlComponent implements OnInit {
             this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
             this.task = 'tutorial';
-            this.nodes = this.dataService.getDatasetNodes('tutorial') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('tutorial') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
         }
 
         this.weightMin = d3.min(this.nodes.map((d: NodeExt) => d.weight)) || 0;
@@ -81,7 +81,20 @@ export class NlComponent implements OnInit {
         
         const x = d3.select(`#node-${id}`).attr('cx');
         const y = d3.select(`#node-${id}`).attr('cy');
-    
+        
+        this.tooltipSelection
+            .style('display', 'block')
+            .raise();
+
+        this.tooltipSelection.selectAll('rect')
+            .attr('x', +x + 10)
+            .attr('y', +y - 10);
+
+        this.tooltipSelection.selectAll('text')
+            .attr('x', +x + 15)
+            .attr('y', +y + 5)
+            .text(`Node: ${id}`);
+
         d3.select(`#label-${id}`)
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
@@ -142,20 +155,6 @@ export class NlComponent implements OnInit {
             .attr('fill', CONFIG.COLOR_CONFIG.LABEL_HIGHLIGHT)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_HIGHLIGHT_OPACITY)
             .style('font-weight', 'bold');
-
-        
-        this.tooltipSelection
-            .style('display', 'block')
-            .raise();
-
-        this.tooltipSelection.selectAll('rect')
-            .attr('x', +x + 10)
-            .attr('y', +y - 10);
-
-        this.tooltipSelection.selectAll('text')
-            .attr('x', +x + 15)
-            .attr('y', +y + 5)
-            .text(`Node: ${id}`);
     }
 
     mouseout() {
@@ -165,7 +164,7 @@ export class NlComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => 0.1 + (this.weightMin + d.weight))
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -201,31 +200,7 @@ export class NlComponent implements OnInit {
             .attr('id', 'wrapper')
             // .attr('transform', 'translate(' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + ',' + CONFIG.MARGINS.TOP + ')');
 
-        this.tooltipSelection = g.append('g').attr('id', 'tooltip');
-
-        this.tooltipSelection
-            .style('display', 'none')
-            .style('pointer-events', 'none');
-
-        this.tooltipSelection
-            .append('rect')
-            .attr('fill', 'white')
-            .attr('fill-opacity', 0.7)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 1)
-            .attr('rx', 5)
-            .attr('ry', 5)
-            .attr('width', 60)
-            .attr('height', 20);
-
-        this.tooltipSelection
-            .append('text')
-            .attr('x', 5)
-            .attr('y', 5)
-            .attr('font-size', 12)
-            .attr('fill', 'black')
-            .attr('font-weight', 'bold')
-            .text('Node');
+        
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
@@ -236,7 +211,7 @@ export class NlComponent implements OnInit {
             .append('line')
             .attr('class', 'link')
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => 0.1 + (this.weightMin + d.weight))
             .attr('stroke-opacity', 0);
 
         // Initialize the nodes
@@ -343,6 +318,32 @@ export class NlComponent implements OnInit {
             .attr('y', (d: NodeExt) => d.nly || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
 
+            this.tooltipSelection = d3.select('#wrapper').append('g').attr('id', 'tooltip');
+    
+            this.tooltipSelection
+                .style('display', 'none')
+                .style('pointer-events', 'none');
+    
+            this.tooltipSelection
+                .append('rect')
+                .attr('fill', 'white')
+                .attr('fill-opacity', 0.7)
+                .attr('stroke', 'black')
+                .attr('stroke-width', 1)
+                .attr('rx', 5)
+                .attr('ry', 5)
+                .attr('width', 60)
+                .attr('height', 20);
+    
+            this.tooltipSelection
+                .append('text')
+                .attr('x', 5)
+                .attr('y', 5)
+                .attr('font-size', 12)
+                .attr('fill', 'black')
+                .attr('font-weight', 'bold')
+                .text('Node');
+
         
             const bbox = (d3.select('#wrapper').node() as any)?.getBBox();
             let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2 
@@ -352,10 +353,12 @@ export class NlComponent implements OnInit {
                 d3.select('#nodes').attr('transform', `translate(${trans}, 0)`);
                 d3.select('#links').attr('transform', `translate(${trans}, 0)`);
                 d3.select('#labels').attr('transform', `translate(${trans}, 0)`);
+                d3.select('#tooltip').attr('transform', `translate(${trans}, 0)`);
             } else {
                 d3.select('#nodes').attr('transform', `translate(${-bbox.width/2}, 0)`);
                 d3.select('#links').attr('transform', `translate(${-bbox.width/2}, 0)`);
                 d3.select('#labels').attr('transform', `translate(${-bbox.width/2}, 0)`);
+                d3.select('#tooltip').attr('transform', `translate(${-bbox.width/2}, 0)`);
             }
     }
 

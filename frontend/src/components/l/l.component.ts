@@ -38,8 +38,8 @@ export class LComponent implements OnInit {
             this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
             this.task = 'tutorial';
-            this.nodes = this.dataService.getDatasetNodes('tutorial') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('tutorial') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
         } 
 
         this.hops = Array.from(new Set(this.nodes.map((d: NodeExt) => d.hop)));
@@ -167,7 +167,7 @@ export class LComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => 0.1 + (this.weightMin + d.weight))
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -201,32 +201,6 @@ export class LComponent implements OnInit {
         .attr('id', 'wrapper')
         .attr('transform', 'translate(' + CONFIG.MARGINS.LEFT + ',' + CONFIG.MARGINS.TOP + ')');
 
-        this.tooltipSelection = g.append('g').attr('id', 'tooltip');
-
-        this.tooltipSelection
-            .style('display', 'none')
-            .style('pointer-events', 'none');
-
-        this.tooltipSelection
-            .append('rect')
-            .attr('fill', 'white')
-            .attr('fill-opacity', 0.7)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 1)
-            .attr('rx', 5)
-            .attr('ry', 5)
-            .attr('width', 60)
-            .attr('height', 20);
-
-        this.tooltipSelection
-            .append('text')
-            .attr('x', 5)
-            .attr('y', 5)
-            .attr('font-size', 12)
-            .attr('fill', 'black')
-            .attr('font-weight', 'bold')
-            .text('Node');
-
         const link = g.append('g')
             .attr('id', 'links');
 
@@ -237,7 +211,7 @@ export class LComponent implements OnInit {
             .append('line')
             .attr('class', 'link')
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => 0.1 + (this.weightMin + d.weight))
             .attr('stroke-opacity', 0);
 
         const guides = g.append('g')
@@ -345,9 +319,37 @@ export class LComponent implements OnInit {
 
         let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width/2 + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2;
 
+        
+        this.tooltipSelection = d3.select('#wrapper').append('g').attr('id', 'tooltip');
+
+        this.tooltipSelection
+            .style('display', 'none')
+            .style('pointer-events', 'none');
+
+        this.tooltipSelection
+            .append('rect')
+            .attr('fill', 'white')
+            .attr('fill-opacity', 0.7)
+            .attr('stroke', 'black')
+            .attr('stroke-width', 1)
+            .attr('rx', 5)
+            .attr('ry', 5)
+            .attr('width', 60)
+            .attr('height', 20);
+
+        this.tooltipSelection
+            .append('text')
+            .attr('x', 5)
+            .attr('y', 5)
+            .attr('font-size', 12)
+            .attr('fill', 'black')
+            .attr('font-weight', 'bold')
+            .text('Node');
+
         d3.select('#nodes').attr('transform', `translate(${trans}, 0)`);
         d3.select('#labels').attr('transform', `translate(${trans}, 0)`);
         d3.select('#links').attr('transform', `translate(${trans}, 0)`);
+        d3.select('#tooltip').attr('transform', `translate(${trans}, 0)`);
     }
 
     ticked() {

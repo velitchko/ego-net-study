@@ -182,11 +182,11 @@ export class MComponent implements AfterViewInit {
 
         this.tooltipSelection.selectAll('rect')
             .attr('x', +x + 10)
-            .attr('y', +y - 10);
+            .attr('y', +y - 20);
 
         this.tooltipSelection.selectAll('text')
             .attr('x', +x + 15)
-            .attr('y', +y + 5)
+            .attr('y', +y - 5)
             .text(`Source: ${source} Target: ${target}`);
     }
 

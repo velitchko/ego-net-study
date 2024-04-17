@@ -45,8 +45,8 @@ export class RComponent implements OnInit {
             this.edges = this.dataService.getDatasetEdges(this.task) as Array<EdgeExt>;
         } else {
             this.task = 'tutorial';
-            this.nodes = this.dataService.getDatasetNodes('tutorial') as Array<NodeExt>;
-            this.edges = this.dataService.getDatasetEdges('tutorial') as Array<EdgeExt>;
+            this.nodes = this.dataService.getDatasetNodes('t1') as Array<NodeExt>;
+            this.edges = this.dataService.getDatasetEdges('t1') as Array<EdgeExt>;
         }
 
         this.hops = this.nodes.map((d: NodeExt) => d.hop);
@@ -177,7 +177,7 @@ export class RComponent implements OnInit {
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.NODE_OPACITY_DEFAULT);
 
         this.edgesSelection
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => 0.1 + (this.weightMin + d.weight))
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
             .attr('stroke-opacity', CONFIG.COLOR_CONFIG.EDGE_OPACITY_DEFAULT);
 
@@ -214,31 +214,6 @@ export class RComponent implements OnInit {
             .attr('transform', 'translate(0,' + CONFIG.MARGINS.TOP + ')');
         //' + ((this.w ? this.w : CONFIG.WIDTH)/4 + CONFIG.MARGINS.LEFT) + '
 
-        this.tooltipSelection = g.append('g').attr('id', 'tooltip');
-
-        this.tooltipSelection
-            .style('display', 'none')
-            .style('pointer-events', 'none');
-
-        this.tooltipSelection
-            .append('rect')
-            .attr('fill', 'white')
-            .attr('fill-opacity', 0.7)
-            .attr('stroke', 'black')
-            .attr('stroke-width', 1)
-            .attr('rx', 5)
-            .attr('ry', 5)
-            .attr('width', 60)
-            .attr('height', 20);
-
-        this.tooltipSelection
-            .append('text')
-            .attr('x', 5)
-            .attr('y', 5)
-            .attr('font-size', 12)
-            .attr('fill', 'black')
-            .attr('font-weight', 'bold')
-            .text('Node');
         // Initialize the links
         const edges = g.append('g')
             .attr('id', 'links');
@@ -247,7 +222,7 @@ export class RComponent implements OnInit {
             .data(this.edges)
             .enter()
             .append('line')
-            .attr('stroke-width', (d: EdgeExt) => this.weightMin / 3 + d.weight)
+            .attr('stroke-width', (d: EdgeExt) => 0.1 + (this.weightMin + d.weight))
             .attr('stroke', (d: EdgeExt) => this.colorService.getStroke(d.hop))
         // Guides
         const guides = g.append('g')
@@ -355,6 +330,32 @@ export class RComponent implements OnInit {
             .attr('x', (d: NodeExt) => d.rx || 0)
             .attr('y', (d: NodeExt) => d.ry || 0)
             .attr('fill-opacity', CONFIG.COLOR_CONFIG.LABEL_OPACITY_DEFAULT);
+        
+            this.tooltipSelection = d3.select('#wrapper').append('g').attr('id', 'tooltip');
+
+            this.tooltipSelection
+                .style('display', 'none')
+                .style('pointer-events', 'none');
+    
+            this.tooltipSelection
+                .append('rect')
+                .attr('fill', 'white')
+                .attr('fill-opacity', 0.7)
+                .attr('stroke', 'black')
+                .attr('stroke-width', 1)
+                .attr('rx', 5)
+                .attr('ry', 5)
+                .attr('width', 60)
+                .attr('height', 20);
+    
+            this.tooltipSelection
+                .append('text')
+                .attr('x', 5)
+                .attr('y', 5)
+                .attr('font-size', 12)
+                .attr('fill', 'black')
+                .attr('font-weight', 'bold')
+                .text('Node');
 
         const bbox = (d3.select('#guides').node() as any)?.getBBox();
         let trans = ((this.w ? this.w : CONFIG.WIDTH) - (bbox.width + CONFIG.MARGINS.LEFT + CONFIG.MARGINS.RIGHT))/2 
@@ -365,6 +366,7 @@ export class RComponent implements OnInit {
         d3.select('#nodes').attr('transform', `translate(${trans}, 0)`);
         d3.select('#links').attr('transform', `translate(${trans}, 0)`);
         d3.select('#labels').attr('transform', `translate(${trans}, 0)`);
+        d3.select('#tooltip').attr('transform', `translate(${trans}, 0)`);
     }
 
     ticked() {
