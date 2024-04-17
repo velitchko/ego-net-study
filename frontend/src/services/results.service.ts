@@ -271,13 +271,25 @@ export class ResultsService {
                 name: `${approach}-${task}`,
 
                 elements: [
-                    // {
-                    //     type: 'html',
-                    //     html: `
-                    //     <h2>${this.titleMap.get(approach) as string}</h2>
-                    //     <p>${this.tutorialRepresenation.get(approach) as string}</p>
-                    //     ` 
-                    // },
+                    {
+                        type: 'html',
+                        html: `
+                        <div style="font-size: 1.5rem;">
+                            <h2>Definitions</h2>
+                            <p style="padding-bottom: .5em;">
+                                <ul style="list-style-type: disc; padding-left: 2rem;">
+                                    <li><b>Ego</b>: The focal node, <span style="font-size: 1.5rem; font-weight: bold; color:#000000;">colored black</span>, of the network.</li>
+                                    <li><b>1-alters</b>: The neighbors of the ego, <span style="font-size: 1.5rem; font-weight: bold; color:#66c2a5;">colored green</span>.</li>
+                                    <li><b>2-alters</b>: The neighbors of the neighbors of the ego, <span style="font-size: 1.5rem; font-weight: bold; color:#fc8d62;">colored orange</span>.</li>
+                                    <li><b>3-alters</b>: The neighbors of the neighbors of the neighbors of the ego, <span style="font-size: 1.5rem; font-weight: bold; color:#8da0cb;">colored blue</span>.</li>
+                                    <li><b>inter-alter edges</b>: Connections between nodes of different alter levels, <span style="font-size: 1.5rem; font-weight: bold; color:#000000;">colored black</span>.</li>
+                                    <li><b>intra-alter edges</b>: Connections between nodes of the same alter level, colored according to alter level.</li>
+                                    <li><b>association strength</b>: The <b>weight</b> of the edge between nodes, encoded as stroke width or cell color.</li>
+                                </ul>
+                            </p>
+                        </div>
+                        ` 
+                    },
                     {
                         type: this.questionMap.get(approach) as string,
                         description: this.titleMap.get(approach) as string,
