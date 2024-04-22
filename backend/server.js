@@ -27,10 +27,10 @@ const taskThresholdMap = new Map([
 ]);
 
 const encodingThresholdMap = new Map([
-    ['node-link', 48],
-    ['matrix', 48],
-    ['layered', 48],
-    ['radial', 48]
+    ['node-link', 25],
+    ['matrix', 25],
+    ['layered', 25],
+    ['radial', 25]
 ]);
 
 const squaresMap = new Map();

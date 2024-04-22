@@ -152,7 +152,7 @@ export class SurveyComponent {
                 if (res) {
                     console.log(res);
                     this.completed = true;
-                    window.open('https://google.com', '_blank'); // TODO: Update with prolific link
+                    window.open('https://app.prolific.com/submissions/complete?cc=C1I2U9RJ', '_blank'); // TODO: Update with prolific link
                 } else {
                     console.error('🚒 Error: no response received from backend');
                 }
