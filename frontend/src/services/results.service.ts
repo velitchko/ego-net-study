@@ -320,7 +320,7 @@ export class ResultsService {
                         type: 'comment', 
                         name: `${approach}-${task}-feedback`,
                         isRequired: true,
-                        title: 'What did you think about this task? What did you find easy or difficult? Any suggestions for improvement?',
+                        title: 'How did this ego network representation help you solve this task?',
                         placeHolder: 'Enter your feedback here'
                     }
                 ]
