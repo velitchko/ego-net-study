@@ -321,7 +321,7 @@ export class ResultsService {
                         title: 'Comments',
                         name: `${approach}-${task}-feedback`,
                         isRequired: true,
-                        placeHolder: 'What did you think about this task?'
+                        placeHolder: 'What did you think about this task? What did you find easy or difficult? Any suggestions for improvement?'
                     }
                 ]
             };
