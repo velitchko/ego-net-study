@@ -217,7 +217,7 @@ export const SURVEY_JSON = {
                 {
                     name: "ego-rep-comments",
                     type: "comment",
-                    title: "What are your final thoughts regarding this ego network's visual representation?", 
+                    title: "What are your final thoughts regarding this ego network's visual representation? How did it assist or hinder you in solving the tasks?", 
                     placeHolder: "Please enter your personal comments:",
                     isRequired: true,
                 }            
