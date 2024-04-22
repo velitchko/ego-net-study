@@ -318,10 +318,10 @@ export class ResultsService {
                     },
                     {
                         type: 'comment', 
-                        title: 'Comments',
                         name: `${approach}-${task}-feedback`,
                         isRequired: true,
-                        placeHolder: 'What did you think about this task? What did you find easy or difficult? Any suggestions for improvement?'
+                        title: 'What did you think about this task? What did you find easy or difficult? Any suggestions for improvement?',
+                        placeHolder: 'Enter your feedback here'
                     }
                 ]
             };
