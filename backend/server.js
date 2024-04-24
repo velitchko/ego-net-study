@@ -27,10 +27,10 @@ const taskThresholdMap = new Map([
 ]);
 
 const encodingThresholdMap = new Map([
-    ['node-link', 25],
     ['matrix', 25],
-    ['layered', 25],
-    ['radial', 25]
+    ['nodelink', 25],
+    ['radial', 25],
+    ['layered', 25]
 ]);
 
 const squaresMap = new Map();
@@ -84,17 +84,21 @@ app.get('/params', (req, res) => {
     // get random order of ego-net approaches
     // randomEgoNetApproaches = squares.get(userTracker.size % 4);
 
-    let randomEncoding = egoNetApproaches[3]; // start with matrix
+    let randomEncoding = egoNetApproaches[0]; // start with matrix
     
     // get list of file names in logs directory
     let logFiles = fs.readdirSync(`${__dirname}/logs`);
     let submissionFiles = fs.readdirSync(`${__dirname}/data`);
 
+    
+
     // get array of file names
     let logFileNames = logFiles.map(file => file.split('-')[1].split('.')[0]);
     let submissionFileNames = submissionFiles.map(file => file.split('-')[1]);
-    // console.log('🪵 Log files:', logFileNames);
-    // console.log('🗄️ Submission files:', submissionFileNames);
+
+
+    console.log('🪵 Log files:', logFileNames);
+    console.log('🗄️ Submission files:', submissionFileNames);
 
     // WITHIN SUBJECT SETUP
     // taskThresholdMap.forEach((threshold, task) => {
@@ -132,7 +136,8 @@ app.get('/params', (req, res) => {
                 randomEncoding = egoNetApproaches[egoNetApproaches.indexOf(encoding) + 1] || egoNetApproaches[0];
                 // console.log(`📁 File count Encoding ${task}: Logs(${logEncodingCount}), Submissions(${submissionEncodingCount})`);
                 console.log('📈 Threshold reached for encoding:', encoding);
-                console.log('➡️ Moving to next task...', randomEncoding);
+                console.log('➡️ Moving to next encoding...', randomEncoding);
+                return;
             } 
         });
     }
