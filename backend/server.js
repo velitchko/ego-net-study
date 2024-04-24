@@ -130,7 +130,7 @@ app.get('/params', (req, res) => {
                 // if log count is greater than or equal to threshold
                 // check if submission count is greater than or equal to threshold -> move to next
                 randomEncoding = egoNetApproaches[egoNetApproaches.indexOf(encoding) + 1] || egoNetApproaches[0];
-                console.log(`📁 File count Encoding ${task}: Logs(${logEncodingCount}), Submissions(${submissionEncodingCount})`);
+                // console.log(`📁 File count Encoding ${task}: Logs(${logEncodingCount}), Submissions(${submissionEncodingCount})`);
                 console.log('📈 Threshold reached for encoding:', encoding);
                 console.log('➡️ Moving to next task...', randomEncoding);
             } 
